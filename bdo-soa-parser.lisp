@@ -64,8 +64,8 @@
     (:SEQUENCE
      "Reference: "
      (:ALTERNATION
-      (:GREEDY-REPETITION 1 NIL :DIGIT-CLASS)
-      "1              0")))
+      "1              0"
+      (:GREEDY-REPETITION 1 NIL :DIGIT-CLASS))))
 
 (ppcre:define-parse-tree-synonym :simple-entry
     (:SEQUENCE
@@ -89,9 +89,11 @@
      (:GREEDY-REPETITION 0 1
                          (:GROUP
                           (:SEQUENCE
-                           :long-space
+                           ;; :long-space
+                           (:NON-GREEDY-REPETITION 0 1 :long-space)
                            #\Newline
                            :long-space
+                           ;; (:NON-GREEDY-REPETITION 1 NIL :EVERYTHING)
                            (:REGISTER
                             :misc))))
      ))
@@ -99,8 +101,15 @@
 (defvar sample-entry "02/21/19   02/24/19   Globe   799.00
    94.28 U.S.DOLLARS
   02/21/19   02/24/19   Globe 2  800.00  
-  02/21/19   02/24/19   Globe 2  800.00
+  02/21/19   02/24/19   Globe 2  800.00 
                         Reference: 867585647654   ")
+
+(ppcre:scan-to-strings '(:SEQUENCE
+                         (:NON-GREEDY-REPETITION 0 1 :long-space)
+                         #\Newline
+                         :long-space
+                         (:REGISTER
+                          :misc)) sample-entry)
 
 (defun from-home (path)
   "Specifically for `uiop:run-program' because it has trouble with tildes.
@@ -125,32 +134,21 @@ Return output text."
                     ))
 
 (defun parse-statement (pdf-path)
-  ;; Generate a text file that we can parse
   (let ((pdf-text (pdftotext pdf-path :page-start 2))
         (entries (list)))
-    ;; (ppcre:all-matches-as-strings entry-regex pdf-text)
+    ;; (ppcre:do-matches-as-strings (entry :misc pdf-text)
+    ;;   (print entry))
     (ppcre:do-register-groups (sale-date post-date description amount misc)
         (:entry pdf-text)
-      (push (list sale-date post-date description amount misc) entries))
-    (reverse entries))
-  ;; (let ((transactions (list)))
-  ;;   ;; Open the temp file
-  ;;   (with-open-file (*pdf-stream* temp-path
-  ;;                                 :direction :input
-  ;;                                 :external-format :utf8)
-  ;;     (loop for line = (read-line *pdf-stream* nil)
-  ;;           while line
-  ;;           do (cond
-  ;;                ((ppcre:scan entry-scanner line) (let ((entry (parse-entry line)))
-  ;;                                                   (setf transactions (cons entry transactions))))
-  ;;                ((ppcre:scan misc-scanner line) (let* ((misc (parse-misc line)))
-  ;;                                                  (setf (getf (car transactions) :misc) misc))))))
-
-  ;;   ;; Delete temp file because let's be responsible.
-  ;;   (print (format nil "Deleting temp file at: ~a" temp-path))
-  ;;   (delete-file temp-path)
-  ;;   (print "Temp file deleted")
-  ;;   transactions)
-  )
+      (let ((entry-data (list sale-date
+                              post-date
+                              description
+                              amount
+                              misc)))
+        (push entry-data entries)
+        )
+      )
+    (reverse entries)
+    ))
 
 (parse-statement (from-home "Downloads/statement.pdf"))
