@@ -1,5 +1,5 @@
 (ql:quickload "cl-ppcre")
-(ql:quickload "cl-pdf-parser")
+;; (ql:quickload "cl-pdf-parser")
 (ql:quickload "str")
 
 (defun n-digits (n)
@@ -98,19 +98,6 @@
                             :misc))))
      ))
 
-(defvar sample-entry "02/21/19   02/24/19   Globe   799.00
-   94.28 U.S.DOLLARS
-  02/21/19   02/24/19   Globe 2  800.00  
-  02/21/19   02/24/19   Globe 2  800.00 
-                        Reference: 867585647654   ")
-
-(ppcre:scan-to-strings '(:SEQUENCE
-                         (:NON-GREEDY-REPETITION 0 1 :long-space)
-                         #\Newline
-                         :long-space
-                         (:REGISTER
-                          :misc)) sample-entry)
-
 (defun from-home (path)
   "Specifically for `uiop:run-program' because it has trouble with tildes.
 `path' must be some path relative to home.
@@ -136,8 +123,6 @@ Return output text."
 (defun parse-statement (pdf-path)
   (let ((pdf-text (pdftotext pdf-path :page-start 2))
         (entries (list)))
-    ;; (ppcre:do-matches-as-strings (entry :misc pdf-text)
-    ;;   (print entry))
     (ppcre:do-register-groups (sale-date post-date description amount misc)
         (:entry pdf-text)
       (let ((entry-data (list sale-date
@@ -145,10 +130,7 @@ Return output text."
                               description
                               amount
                               misc)))
-        (push entry-data entries)
-        )
-      )
-    (reverse entries)
-    ))
+        (push entry-data entries)))
+    (reverse entries)))
 
 (parse-statement (from-home "Downloads/statement.pdf"))
