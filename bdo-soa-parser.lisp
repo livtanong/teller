@@ -1,6 +1,11 @@
 (ql:quickload "cl-ppcre")
 ;; (ql:quickload "cl-pdf-parser")
 (ql:quickload "str")
+(ql:quickload "cl-csv")
+(ql:quickload "parse-float")
+
+(ppcre:define-parse-tree-synonym :comma
+  #\,)
 
 (defun n-digits (n)
   `(:NON-GREEDY-REPETITION ,n ,n :DIGIT-CLASS))
@@ -98,39 +103,30 @@
                             :misc))))
      ))
 
-(defun from-home (path)
-  "Specifically for `uiop:run-program' because it has trouble with tildes.
-`path' must be some path relative to home.
-Return a string representing the absolute path."
-  (let ((home-string (namestring (user-homedir-pathname))))
-    (concatenate 'string home-string path)))
-
-(defun pdftotext (pdf-path &key page-start)
+(defun pdf-to-text (pdf-path)
   "Runs a shell script, `pdftotext'. There may be many incarnations of this
 script, so to be safe, use the version that comes with `poppler'.
 `pdf-path' is assumed not to be able to handle `~~' as the shortcut for home.
 Make sure to use `from-home' to get a path that comes from home.
 Return output text."
-  (uiop:run-program (list "pdftotext"
-                          "-f" (write-to-string page-start)
-                          "-nopgbrk"
-                          "-layout" ; Preserve original PDF layout
-                          pdf-path
-                          "-")
-                    :output :string
-                    ))
+  (let ((command (format nil "pdftotext -nopgbrk -layout ~a -" pdf-path)))
+    (uiop:run-program command :output :string)))
 
 (defun parse-statement (pdf-path)
-  (let ((pdf-text (pdftotext pdf-path :page-start 2))
-        (entries (list)))
-    (ppcre:do-register-groups (sale-date post-date description amount misc)
-        (:entry pdf-text)
-      (let ((entry-data (list sale-date
-                              post-date
-                              description
-                              amount
-                              misc)))
-        (push entry-data entries)))
-    (reverse entries)))
+  (let* ((pdf-text (pdf-to-text (namestring pdf-path)))
+         (matches (ppcre:all-matches-as-strings :entry pdf-text)))
+    (map 'list
+         (lambda (match)
+           (coerce (nth-value 1 (ppcre:scan-to-strings :entry match)) 'list))
+         matches)))
 
-(parse-statement (from-home "Downloads/statement.pdf"))
+(defun pdf-to-csv (pdf-path csv-path)
+  (with-open-file (stream csv-path :direction :output
+                                   :if-exists :overwrite
+                                   :if-does-not-exist :create)
+    (cl-csv:write-csv (cons '("sale-date" "post-date" "description" "amount" "misc")
+                            (parse-statement pdf-path))
+                      :stream stream)))
+
+(pdf-to-csv #P"~/Downloads/statement.pdf" #P"~/Downloads/statement.csv")
+(parse-statement #P"~/Downloads/statement.pdf")
