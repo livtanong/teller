@@ -1,8 +1,10 @@
-(ql:quickload "cl-ppcre")
-;; (ql:quickload "cl-pdf-parser")
-(ql:quickload "str")
-(ql:quickload "cl-csv")
-(ql:quickload "parse-float")
+(defpackage :teller
+  (:use :common-lisp)
+  (:export #:tell))
+
+(in-package :teller)
+
+(declaim (optimize (speed 3) (debug 0) (safety 0)))
 
 (ppcre:define-parse-tree-synonym :comma
   #\,)
@@ -33,12 +35,11 @@
 (ppcre:define-parse-tree-synonym :yy
   :2-digits)
 
-(ppcre:define-parse-tree-synonym :date
-    (:SEQUENCE :mm #\/ :dd #\/ :yy))
+(ppcre:define-parse-tree-synonym :/
+  (:ALTERNATION #\/ #\-))
 
-(ppcre:define-parse-tree-synonym :sale-date :date)
-
-(ppcre:define-parse-tree-synonym :post-date :date)
+(ppcre:define-parse-tree-synonym :mm/dd/yy
+    (:SEQUENCE :mm :/ :dd :/ :yy))
 
 (ppcre:define-parse-tree-synonym :amount
     (:SEQUENCE
@@ -50,8 +51,7 @@
                                :3-digits
                                )))
      #\.
-     :2-digits
-     ))
+     :2-digits))
 
 (ppcre:define-parse-tree-synonym :description
     (:SEQUENCE
@@ -74,14 +74,13 @@
 
 (ppcre:define-parse-tree-synonym :simple-entry
     (:SEQUENCE
-     (:REGISTER :sale-date)
+     (:REGISTER :mm/dd/yy)
      :long-space
-     (:REGISTER :post-date)
+     (:REGISTER :mm/dd/yy)
      :long-space
      (:REGISTER :description)
      :long-space
-     (:REGISTER :amount)
-     ))
+     (:REGISTER :amount)))
 
 (ppcre:define-parse-tree-synonym :misc
     (:ALTERNATION
@@ -94,14 +93,11 @@
      (:GREEDY-REPETITION 0 1
                          (:GROUP
                           (:SEQUENCE
-                           ;; :long-space
                            (:NON-GREEDY-REPETITION 0 1 :long-space)
                            #\Newline
                            :long-space
-                           ;; (:NON-GREEDY-REPETITION 1 NIL :EVERYTHING)
                            (:REGISTER
-                            :misc))))
-     ))
+                            :misc))))))
 
 (defun pdf-to-text (pdf-path)
   "Runs a shell script, `pdftotext'. There may be many incarnations of this
@@ -128,5 +124,10 @@ Return output text."
                             (parse-statement pdf-path))
                       :stream stream)))
 
-(pdf-to-csv #P"~/Downloads/statement.pdf" #P"~/Downloads/statement.csv")
-(parse-statement #P"~/Downloads/statement.pdf")
+(defun tell ()
+  (let ((pdf-stringpath "~/Downloads/statement.pdf")
+        (csv-stringpath "~/Downloads/statement.csv"))
+    (pdf-to-csv (pathname pdf-stringpath) (pathname csv-stringpath))))
+
+;; (pdf-to-csv #P"~/Downloads/statement.pdf" #P"~/Downloads/statement.csv")
+;; (parse-statement #P"~/Downloads/statement.pdf")
