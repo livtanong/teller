@@ -6,6 +6,20 @@
 
 (declaim (optimize (speed 3) (debug 0) (safety 0)))
 
+(opts:define-opts
+  (:name :input
+   :description "Input file. Should be a pdf."
+   :short #\i
+   :long "input"
+   :arg-parser #'pathname
+   :meta-var "FILE")
+  (:name :output
+   :description "Output file. Should be csv."
+   :short #\o
+   :long "output"
+   :arg-parser #'pathname
+   :meta-var "FILE"))
+
 (ppcre:define-parse-tree-synonym :comma
   #\,)
 
@@ -117,17 +131,20 @@ Return output text."
          matches)))
 
 (defun pdf-to-csv (pdf-path csv-path)
-  (with-open-file (stream csv-path :direction :output
-                                   :if-exists :overwrite
-                                   :if-does-not-exist :create)
-    (cl-csv:write-csv (cons '("sale-date" "post-date" "description" "amount" "misc")
-                            (parse-statement pdf-path))
-                      :stream stream)))
+  (let ((rows (cons '("sale-date" "post-date" "description" "amount" "misc")
+                    (parse-statement pdf-path))))
+    (if csv-path
+        (with-open-file (stream csv-path :direction :output
+                                         :if-exists :overwrite
+                                         :if-does-not-exist :create)
+          (cl-csv:write-csv rows :stream stream))
+        (cl-csv:write-csv rows :stream *standard-output*))))
 
 (defun tell ()
-  (let ((pdf-stringpath "~/Downloads/statement.pdf")
-        (csv-stringpath "~/Downloads/statement.csv"))
-    (pdf-to-csv (pathname pdf-stringpath) (pathname csv-stringpath))))
+  (let* ((options (opts:get-opts))
+         (input (getf options :input))
+         (output (getf options :output)))
+    (pdf-to-csv input output)))
 
 ;; (pdf-to-csv #P"~/Downloads/statement.pdf" #P"~/Downloads/statement.csv")
 ;; (parse-statement #P"~/Downloads/statement.pdf")
