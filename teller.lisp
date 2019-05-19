@@ -115,10 +115,7 @@
 
 (defun pdf-to-text (pdf-path)
   "Runs a shell script, `pdftotext'. There may be many incarnations of this
-script, so to be safe, use the version that comes with `poppler'.
-`pdf-path' is assumed not to be able to handle `~~' as the shortcut for home.
-Make sure to use `from-home' to get a path that comes from home.
-Return output text."
+script, so to be safe, use the version that comes with `poppler'."
   (let ((command (format nil "pdftotext -nopgbrk -layout ~a -" pdf-path)))
     (uiop:run-program command :output :string)))
 
