@@ -11,3 +11,11 @@ install:
 
 script:
   - make build
+
+deploy:
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  file: "dist/teller"
+  skip_cleanup: true
+  on:
+    tags: true
