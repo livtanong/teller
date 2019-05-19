@@ -131,20 +131,18 @@ Return output text."
          matches)))
 
 (defun pdf-to-csv (pdf-path csv-path)
-  (let ((rows (cons '("sale-date" "post-date" "description" "amount" "misc")
-                    (parse-statement pdf-path))))
-    (if csv-path
-        (with-open-file (stream csv-path :direction :output
-                                         :if-exists :overwrite
-                                         :if-does-not-exist :create)
-          (cl-csv:write-csv rows :stream stream))
-        (cl-csv:write-csv rows :stream *standard-output*))))
+  (let ((output-data (cons '("sale-date" "post-date" "description" "amount" "misc")
+                           (parse-statement pdf-path)))
+        (output-stream (if csv-path
+                           (open csv-path :direction :output
+                                          :if-exists :overwrite
+                                          :if-does-not-exist :create)
+                           *standard-output*)))
+    (cl-csv:write-csv output-data :stream output-stream)
+    (close output-stream)))
 
 (defun tell ()
   (let* ((options (opts:get-opts))
          (input (getf options :input))
          (output (getf options :output)))
     (pdf-to-csv input output)))
-
-;; (pdf-to-csv #P"~/Downloads/statement.pdf" #P"~/Downloads/statement.csv")
-;; (parse-statement #P"~/Downloads/statement.pdf")
