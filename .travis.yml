@@ -12,10 +12,13 @@ install:
 script:
   - make build
 
+before_deploy:
+  - make build
+
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN
-  file: dist/*
+  file: $TRAVIS_BUILD_DIR/dist/teller
   skip_cleanup: true
   on:
-    tags: true
+    tags: false
