@@ -12,9 +12,6 @@ install:
 script:
   - make build
 
-before_deploy:
-  - make build
-
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN
