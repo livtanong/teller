@@ -11,10 +11,10 @@ install:
 
 script:
   # - make build
-  - cl -l teller-executable -e '(asdf:make :teller-executable)' -e '(quit)'
+  - cl -l teller-executable -e '(asdf:make :teller-executable)'
   - pwd
   - echo $TRAVIS_BUILD_DIR
-  - ls -alh ..
+  - ls -alh
 
 deploy:
   provider: releases
