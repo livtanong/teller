@@ -1,18 +1,19 @@
 language: common-lisp
 sudo: required
 
-env:
-  matrix:
-    - LISP=sbcl
+# env:
+  # matrix:
+    # - LISP=sbcl
 
 install:
   # Install cl-travis
-  - curl https://raw.githubusercontent.com/luismbo/cl-travis/master/install.sh | bash
+  # - curl https://raw.githubusercontent.com/luismbo/cl-travis/master/install.sh | bash
+  - apt-get install buildapp
 
 script:
   # - make build
-  - cl -l teller-executable -e '(asdf:make :teller-executable)'
-  - echo $SBCL_HOME
+  # - cl -l teller-executable -e '(asdf:make :teller-executable)'
+  - buildapp --output teller --entry teller:tell --load-system teller-executable
   - pwd
   - ls -alh
 
