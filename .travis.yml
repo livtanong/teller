@@ -18,6 +18,7 @@ script:
     --entry teller:tell
     --load-system teller-executable
     --asdf-path .
+    --eval '(ql:quickload :teller-executable)'
   - pwd
   - ls -alh
 
