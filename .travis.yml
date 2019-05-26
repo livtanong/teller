@@ -13,7 +13,7 @@ install:
 script:
   # - make build
   # - cl -l teller-executable -e '(asdf:make :teller-executable)'
-  - buildapp --output teller --entry teller:tell --load-system teller-executable
+  - buildapp --output teller --entry teller:tell --load-system teller-executable --asdf-path $TRAVIS_BUILD_DIR
   - pwd
   - ls -alh
 
