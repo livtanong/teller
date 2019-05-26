@@ -17,5 +17,6 @@ deploy:
   api_key: $GITHUB_TOKEN
   file: "teller"
   skip_cleanup: true
+  draft: true
   on:
-    tags: false
+    tags: true
