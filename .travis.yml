@@ -8,7 +8,7 @@ sudo: required
 install:
   # Install cl-travis
   # - curl https://raw.githubusercontent.com/luismbo/cl-travis/master/install.sh | bash
-  - apt-get install buildapp
+  - sudo apt-get install buildapp
 
 script:
   # - make build
