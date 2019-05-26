@@ -13,6 +13,7 @@ script:
   # - make build
   - cl -l teller-executable -e '(asdf:make :teller-executable)' -e '(quit)'
   - pwd
+  - echo $TRAVIS_BUILD_DIR
   - ls -alh ..
 
 deploy:
