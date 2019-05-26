@@ -13,7 +13,7 @@ script:
   # - make build
   - cl -l teller-executable -e '(asdf:make :teller-executable)' -e '(quit)'
   - pwd
-  - ls -alh
+  - ls -alh ..
 
 deploy:
   provider: releases
