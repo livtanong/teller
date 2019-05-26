@@ -12,6 +12,7 @@ install:
 script:
   # - make build
   - cl -l teller-executable -e '(asdf:make :teller-executable)'
+  - echo $SBCL_HOME
   - pwd
   - ls -alh
 
