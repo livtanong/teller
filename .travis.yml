@@ -11,6 +11,8 @@ install:
 
 script:
   - make build
+  - pwd
+  - ls .
 
 deploy:
   provider: releases
