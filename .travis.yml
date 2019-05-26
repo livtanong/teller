@@ -11,7 +11,7 @@ install:
 
 script:
   # - make build
-  - cl -l teller-executable -e '(asdf:make :teller-executable)'
+  - cl -l teller-executable -e '(asdf:make :teller-executable :build-pathname "foobar")'
   - pwd
   - echo $TRAVIS_BUILD_DIR
   - ls -alh
