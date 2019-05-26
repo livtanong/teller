@@ -1,9 +1,9 @@
 language: common-lisp
 sudo: required
 
-# env:
-  # matrix:
-    # - LISP=sbcl
+env:
+  matrix:
+    - LISP=sbcl
 
 install:
   # Install cl-travis
