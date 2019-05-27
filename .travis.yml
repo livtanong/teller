@@ -16,9 +16,9 @@ script:
   - buildapp
     --output teller
     --entry teller:tell
-    --load-system teller-executable
-    --asdf-tree .
+    --load teller-executable.asd
     --eval '(ql:quickload :teller-executable)'
+    --asdf-tree .
   - pwd
   - ls -alh
 
@@ -30,3 +30,5 @@ deploy:
   draft: true
   on:
     tags: true
+
+    # --load-system teller-executable
