@@ -17,7 +17,6 @@ script:
     --output teller
     --entry teller:tell
     --load teller-executable.asd
-    --eval '(ql:quickload :teller-executable)'
     --asdf-tree .
   - pwd
   - ls -alh
@@ -32,3 +31,5 @@ deploy:
     tags: true
 
     # --load-system teller-executable
+
+    # --eval '(ql:quickload :teller-executable)'
