@@ -13,11 +13,15 @@ install:
 script:
   # - make build
   # - cl -l teller-executable -e '(asdf:make :teller-executable)'
+  - sbcl --no-userinit --no-sysinit --non-interactive
+    --load ~/quicklisp/setup.lisp
+    --eval '(ql:quickload "teller-executable")'
+    --eval '(ql:write-asdf-manifest-file "quicklisp-manifest.txt")'
   - buildapp
+    --manifest-file quicklisp-manifest.txt
     --output teller
     --entry teller:tell
-    --load teller-executable.asd
-    --asdf-tree .
+    --load-system teller-executable
   - pwd
   - ls -alh
 
