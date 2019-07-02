@@ -23,6 +23,8 @@
   (:name :password
    :description "Password for encrypted file"
    :short #\p
+   :long "password"
+   :arg-parser #'identity
    :meta-var "STRING"))
 
 (ppcre:define-parse-tree-synonym :comma
@@ -126,8 +128,8 @@ script, so to be safe, use the version that comes with `poppler'."
                      (format nil "pdftotext -nopgbrk -layout ~a -" pdf-path))))
     (uiop:run-program command :output :string)))
 
-(defun parse-statement (pdf-path)
-  (let* ((pdf-text (pdf-to-text (namestring pdf-path)))
+(defun parse-statement (pdf-path password)
+  (let* ((pdf-text (pdf-to-text (namestring pdf-path) password))
          (matches (ppcre:all-matches-as-strings :entry pdf-text)))
     (map 'list
          (lambda (match)
