@@ -12,13 +12,18 @@
    :short #\i
    :long "input"
    :arg-parser #'pathname
-   :meta-var "FILE")
+   :meta-var "FILE"
+   :required t)
   (:name :output
    :description "Output file. Should be csv."
    :short #\o
    :long "output"
    :arg-parser #'pathname
-   :meta-var "FILE"))
+   :meta-var "FILE")
+  (:name :password
+   :description "Password for encrypted file"
+   :short #\p
+   :meta-var "STRING"))
 
 (ppcre:define-parse-tree-synonym :comma
   #\,)
@@ -113,10 +118,12 @@
                            (:REGISTER
                             :misc))))))
 
-(defun pdf-to-text (pdf-path)
+(defun pdf-to-text (pdf-path password)
   "Runs a shell script, `pdftotext'. There may be many incarnations of this
 script, so to be safe, use the version that comes with `poppler'."
-  (let ((command (format nil "pdftotext -nopgbrk -layout ~a -" pdf-path)))
+  (let ((command (if password
+                     (format nil "pdftotext -nopgbrk -layout -upw ~a ~a -" password pdf-path)
+                     (format nil "pdftotext -nopgbrk -layout ~a -" pdf-path))))
     (uiop:run-program command :output :string)))
 
 (defun parse-statement (pdf-path)
@@ -127,9 +134,9 @@ script, so to be safe, use the version that comes with `poppler'."
            (coerce (nth-value 1 (ppcre:scan-to-strings :entry match)) 'list))
          matches)))
 
-(defun pdf-to-csv (pdf-path csv-path)
+(defun pdf-to-csv (pdf-path csv-path password)
   (let ((output-data (cons '("sale-date" "post-date" "description" "amount" "misc")
-                           (parse-statement pdf-path)))
+                           (parse-statement pdf-path password)))
         (output-stream (if csv-path
                            (open csv-path :direction :output
                                           :if-exists :overwrite
@@ -141,5 +148,6 @@ script, so to be safe, use the version that comes with `poppler'."
 (defun tell ()
   (let* ((options (opts:get-opts))
          (input (getf options :input))
-         (output (getf options :output)))
-    (pdf-to-csv input output)))
+         (output (getf options :output))
+         (password (getf options :password)))
+    (pdf-to-csv input output password)))
