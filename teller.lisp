@@ -13,7 +13,7 @@
     (:name :help
      :description "Print this help text"
      :short #\h
-     :long :help)
+     :long "help")
     (:name :input
      :description "Input file. Should be a pdf."
      :short #\i
