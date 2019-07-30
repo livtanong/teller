@@ -17,26 +17,25 @@
     (:name :input
      :description "Input file. Should be a pdf."
      :short #\i
-     :long "input"
+     :long "in"
      :arg-parser #'pathname
-     :meta-var "FILE"
-     :required t)
+     :meta-var "FILE")
   (:name :output
    :description "Output file. Should be csv."
    :short #\o
-   :long "output"
+   :long "out"
    :arg-parser #'pathname
    :meta-var "FILE")
   (:name :password
    :description "Password for encrypted file"
    :short #\p
-   :long "password"
+   :long "pass"
    :arg-parser #'identity
    :meta-var "STRING")
-  (:name :input-date-format
+  (:name :date-format
    :description "Date format of the pdf because some institutions are insane. Default: \"yyyy/mm/dd\". If the year is only two y's, (e.g. mm/dd/yy) teller prepends \"20\" to the year."
    :short #\d
-   :long "input-date-format"
+   :long "date-format"
    :arg-parser #'identity
    :meta-var "STRING"))
 
@@ -208,9 +207,12 @@ script, so to be safe, use the version that comes with `poppler'."
 
 (defun tell ()
   (let* ((options (opts:get-opts))
+         (help (getf options :help))
          (input (getf options :input))
          (output (getf options :output))
          (password (getf options :password))
-         (input-date-format (or (getf options :input-date-format) sane-date-format))
-         )
-    (pdf-to-csv input output password input-date-format)))
+         (date-format (or (getf options :date-format) sane-date-format)))
+    (if help
+        (opts:describe
+         :usage-of "teller")
+        (pdf-to-csv input output password date-format))))
