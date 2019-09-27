@@ -89,6 +89,7 @@
 
 (ppcre:define-parse-tree-synonym :amount
     (:SEQUENCE
+     (:GREEDY-REPETITION 0 1 #\-)
      (:NON-GREEDY-REPETITION 1 3 :DIGIT-CLASS)
      (:NON-GREEDY-REPETITION 0 NIL
                              (:GROUP
