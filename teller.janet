@@ -60,20 +60,21 @@
                      (capture :amount :amount)
                      :s*
                      )
-    :main :simple-entry #(group :simple-entry)
+    :multiline-entry  (sequence
+                        :simple-entry 
+                        :s*
+                         # :s*
+                         # (not :simple-entry)
+                         (if-not :simple-entry (capture :description))
+                         )
+                         
+    :entry (choice :multiline-entry :simple-entry)
+    :main  (some (group :entry))
     })
-(def derp
-  '(sequence
-    (? "-")
-    (at-most 3 :d)
-    (any (sequence
-          (? ",")
-          (repeat 3 :d)))
-    "."
-    (some :d)))
-(peg/match ~(sequence :s* (capture ,derp) :s*) "   1,340.50    ")
+(peg/match "\n" "\n   ")
 (peg/match '(any (sequence (? ",") (repeat 3 :d))) "123")
-(peg/match soa-grammar "      2020/08/08   2020/08/11      yo waddup dawg   1,340.50    ")
+(peg/match soa-grammar "2020/08/08   2020/08/11      yo waddup dawg   1,340.50")
+(peg/match soa-grammar "      2020/08/08   2020/08/11      yo waddup dawg   1,340.50    \n     somethign something    \n       2020/08/09   2020/08/12      iasdpfiawser   1,420.50    ")
 (peg/match soa-grammar "2020/08/08 2020/08/11")
 (peg/match '(sequence "0" (range "19")) "08")
 
