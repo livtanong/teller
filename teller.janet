@@ -50,7 +50,7 @@
                        (some :d))
     :amount :financial-number
     :simple-entry (sequence
-                     :s*
+                     # :s*
                      (capture :date :date1)
                      :s+
                      (capture :date :date2)
@@ -58,7 +58,7 @@
                      (capture :description :description)
                      :s+
                      (capture :amount :amount)
-                     :s*
+                     # :s*
                      )
     :multiline-entry  (sequence
                         :simple-entry 
@@ -68,13 +68,13 @@
                          (if-not :simple-entry (capture :description))
                          )
                          
-    :entry (choice :multiline-entry :simple-entry)
-    :main  (some (group :entry))
+    :entry (thru (group (choice :multiline-entry :simple-entry)))
+  :main (thru (some :entry)) #(sequence (any (choice :s :S)) :entries)
     })
 (peg/match "\n" "\n   ")
 (peg/match '(any (sequence (? ",") (repeat 3 :d))) "123")
 (peg/match soa-grammar "2020/08/08   2020/08/11      yo waddup dawg   1,340.50")
-(peg/match soa-grammar "      2020/08/08   2020/08/11      yo waddup dawg   1,340.50    \n     somethign something    \n       2020/08/09   2020/08/12      iasdpfiawser   1,420.50    ")
+(peg/match soa-grammar "wat 2020/08/08   2020/08/11      yo waddup dawg   1,340.50    \n     somethign something    \n       2020/08/09   2020/08/12      iasdpfiawser   1,420.50    ")
 (peg/match soa-grammar "2020/08/08 2020/08/11")
 (peg/match '(sequence "0" (range "19")) "08")
 
@@ -92,4 +92,5 @@
                                                                            (read-pdf (string/trimr (string/slice password-buffer) "\n")))
       :else (do (print "lol some other error")))))
 
-(read-pdf "")
+(peg/match '(thru "Credit Cards") (read-pdf "250107"))
+(peg/match soa-grammar (read-pdf "250107"))
