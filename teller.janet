@@ -67,10 +67,9 @@
                          # (not :simple-entry)
                          (if-not :simple-entry (capture :description))
                          )
-                         
     :entry (thru (group (choice :multiline-entry :simple-entry)))
-  :main (thru (some :entry)) #(sequence (any (choice :s :S)) :entries)
-    })
+    :main (thru (some :entry)) #(sequence (any (choice :s :S)) :entries)
+   })
 (peg/match "\n" "\n   ")
 (peg/match '(any (sequence (? ",") (repeat 3 :d))) "123")
 (peg/match soa-grammar "2020/08/08   2020/08/11      yo waddup dawg   1,340.50")
@@ -83,7 +82,6 @@
          :err err
          :out out} (run-cmd ["pdftotext" "-nopgbrk" "-layout" "-upw" password "/mnt/c/Users/Levi/Downloads/statement.pdf" "-"])
         password-buffer @""]
-    (print "exit code: " exit-code)
     (cond
       (= exit-code 0) out
       (and (not= exit-code 0)
@@ -94,3 +92,30 @@
 
 (peg/match '(thru "Credit Cards") (read-pdf "250107"))
 (peg/match soa-grammar (read-pdf "250107"))
+
+(defn pad-array
+  "Pad array up to n with padding. Defaults to nil."
+  [arr n &opt padding]
+  (default padding nil)
+  (let [diff (- n (length arr))]
+    (repeat diff
+            (array/push arr padding))
+    arr))
+
+(defn render-row
+  [tuple-row]
+  (let [padded-row (pad-array tuple-row 5 "")]
+    (string/join padded-row "\t")))
+
+(render-row @["07/25/20" "09/01/20" "FOOD PANDA MAKATI PHL" "-1,525.99" "Reference: 1"])
+(render-row @["07/25/20" "09/01/20" "FOOD PANDA MAKATI PHL" "-1,525.99"])
+
+(defn data->csv [pdf-text]
+  (string/join
+   (map render-row
+        (peg/match soa-grammar pdf-text))
+   "\n"))
+
+
+
+ (spit "out.tsv" (data->csv (read-pdf "250107")))
