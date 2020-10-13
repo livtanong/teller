@@ -1,0 +1,35 @@
+{:date (choice :yyyy-mm-dd
+               :dd-mm-yyyy
+               :mm-dd-yyyy
+               :mm-dd-yy
+               :yy-mm-dd)
+ :description (sequence (some :S) (any (sequence :s (some :S))))
+ :amount (sequence
+          (? "-")
+          (at-most 3 :d)
+          (any (sequence
+                ","
+                (repeat 3 :d)))
+          "."
+          (some :d))
+ :simple-entry (sequence
+                # :s*
+                (capture :date :date1)
+                :s+
+                  (capture :date :date2)
+                  :s+
+                  (capture :description :description)
+                  :s+
+                  (capture :amount :amount)
+                  # :s*
+                  )
+ :multiline-entry  (sequence
+                    :simple-entry
+                      :s*
+                      # :s*
+                      # (not :simple-entry)
+                      (if-not :simple-entry (capture :description))
+                      )
+ :entry (thru (group (choice :multiline-entry :simple-entry)))
+ :main (thru (some :entry)) #(sequence (any (choice :s :S)) :entries)
+}
