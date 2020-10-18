@@ -6,7 +6,7 @@
                  "https://github.com/janet-lang/argparse"])
 
 (declare-source
- :source ["src/teller.janet"])
+ :source ["src/teller.janet" "src/statement-formats/bdo.janet"])
 
 (declare-executable
  :name "teller"

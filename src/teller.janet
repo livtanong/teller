@@ -1,24 +1,25 @@
 (import jdn)
-(import argparse :prefix "")
+(import argparse)
+(import ./statement-formats/bdo)
 
 (def statement-format-dict
-  {:bdo "statement-formats/bdo.jdn"})
+  {:bdo bdo/format})
 
 (def argparse-params
   ["foo bar"
    "config" {:kind :option
-               :short "c"
+             :short "c"
              :help "The path to the config file."
             }
    "format" {:kind :option
-               :short "f"
+             :short "f"
              :help "The path to the format jdn."}
    "input" {:kind :option
-              :short "i"
-            :help "The path to the input file. Must be a pdf."}
+            :short "i"
+            :help "Optional. The path to the input file. Must be a pdf. If not provided, will look in config file."}
    "output" {:kind :option
-               :short "o"
-            :help "The path to the output file. Must be a tsv."}])
+             :short "o"
+             :help "Optional. The path to the output file. Must be a tsv. If not provided, will print to STDOUT"}])
 
 (defn run-cmd [args]
   (let [out-temp-file (file/temp)
@@ -32,18 +33,27 @@
 
 (def base-grammar
   '{:mm (choice (sequence "0" (range "19"))
-                (sequence "1" (range "02")))
-    :yy (sequence :d :d)
-    :yyyy (sequence :d :d :d :d)
-    :dd (choice (sequence "0" :d)
-                (sequence (range "12") :d)
-                (sequence "3" (range "01")))
-    :/ (set "/-")
-    :yyyy-mm-dd (sequence :yyyy :/ :mm :/ :dd)
-    :dd-mm-yyyy (sequence :dd :/ :mm :/ :yyyy)
-    :mm-dd-yyyy (sequence :mm :/ :dd :/ :yyyy)
-    :mm-dd-yy (sequence :mm :/ :dd :/ :yy)
-    :yy-mm-dd (sequence :yy :/ :mm :/ :dd)})
+          (sequence "1" (range "02")))
+  :yy (sequence :d :d)
+  :yyyy (sequence :d :d :d :d)
+  :dd (choice (sequence "0" :d)
+        (sequence (range "12") :d)
+        (sequence "3" (range "01")))
+  :/ (set "/-")
+  :yyyy-mm-dd (sequence :yyyy :/ :mm :/ :dd)
+  :dd-mm-yyyy (sequence :dd :/ :mm :/ :yyyy)
+  :mm-dd-yyyy (sequence :mm :/ :dd :/ :yyyy)
+  :mm-dd-yy (sequence :mm :/ :dd :/ :yy)
+  :yy-mm-dd (sequence :yy :/ :mm :/ :dd)
+  :financial-figure (sequence
+                      (? "-")
+                      (at-most 3 :d)
+                      (any (sequence
+                             ","
+                             (repeat 3 :d)))
+                      "."
+                      (some :d))
+  :simple-phrase (sequence (some :S) (any (sequence :s (some :S))))})
 
 # (def statement-grammar
 #   (table/to-struct
@@ -126,22 +136,24 @@
 
 (defn main [& args]
   (with-dyns [:args args]
-    (let [res (argparse ;argparse-params)]
+    (let [res (argparse/argparse (splice argparse-params))]
       (unless res
         (os/exit 1))
       (let [home-path (os/getenv "HOME")
-            default-config-path (os/getenv "TELLER_CONFIG" (str home-path "/.config/teller/config.jdn"))
-            format-path (get res "format")
+            default-config-path (os/getenv "TELLER_CONFIG" (string home-path "/.config/teller/config.jdn"))
+            format-key (get res "format")
             input-path (get res "input")
             output-path (get res "output")
             config-path (get res "config" default-config-path)
             config (jdn/decode (slurp config-path))
-            statement-format (jdn/decode (slurp format-path))
+            statement-format (get statement-format-dict (get config :statement-format))
             statement-grammar (table/to-struct
                                (merge base-grammar statement-format))
             pdf-text (read-pdf input-path "")
             parsed-soa (peg/match statement-grammar pdf-text)
             output-text (data->tsv parsed-soa)]
-        (spit output-path output-text)))))
+        (if output-path
+          (spit output-path output-text)
+          output-text)))))
 
-#(main "teller" "--format" "../soa-formats/bdo.jdn" "--input" "/mnt/c/Users/Levi/Downloads/statement.pdf" "--output" "test.tsv")
+(main "teller" "--input" "/mnt/c/Users/Levi/Downloads/statement.pdf")
