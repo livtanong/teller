@@ -1,6 +1,7 @@
 (import jdn)
 (import argparse)
 (import ./statement-formats/bdo)
+(import ./jdn-loader)
 
 (def statement-format-dict
   {:bdo bdo/format})
@@ -54,47 +55,6 @@
                       "."
                       (some :d))
   :simple-phrase (sequence (some :S) (any (sequence :s (some :S))))})
-
-# (def statement-grammar
-#   (table/to-struct
-#    (merge
-#     base-grammar
-#     '{:date (choice :yyyy-mm-dd
-#                :dd-mm-yyyy
-#                :mm-dd-yyyy
-#                :mm-dd-yy
-#                :yy-mm-dd)
-#       :description (sequence (some :S) (any (sequence :s (some :S))))
-#       :financial-number (sequence
-#                          (? "-")
-#                          (at-most 3 :d)
-#                          (any (sequence
-#                                ","
-#                                (repeat 3 :d)))
-#                          "."
-#                          (some :d))
-#       :amount :financial-number
-#         :simple-entry (sequence
-#                        # :s*
-#                        (capture :date :date1)
-#                        :s+
-#                          (capture :date :date2)
-#                          :s+
-#                          (capture :description :description)
-#                          :s+
-#                          (capture :amount :amount)
-#                          # :s*
-#                          )
-#       :multiline-entry  (sequence
-#                          :simple-entry
-#                            :s*
-#                            # :s*
-#                            # (not :simple-entry)
-#                            (if-not :simple-entry (capture :description))
-#                            )
-#       :entry (thru (group (choice :multiline-entry :simple-entry)))
-#       :main (thru (some :entry)) #(sequence (any (choice :s :S)) :entries)
-#      })))
 
 (defn read-pdf [path password]
   (let [{:exit-code exit-code
@@ -156,4 +116,4 @@
           (spit output-path output-text)
           output-text)))))
 
-(main "teller" "--input" "/mnt/c/Users/Levi/Downloads/statement.pdf")
+#(main "teller" "--input" "/mnt/c/Users/Levi/Downloads/statement.pdf")
