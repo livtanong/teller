@@ -19,6 +19,14 @@
     (dofile temp-file (splice args))
     ))
 
+(defn remove-extension
+  [filename]
+  (let [segments (string/split "." filename)
+        # pop is destructive, and returns the element.
+        _ (if (> (length segments) 1) (array/pop segments) segments)
+        no-extension (string/join segments ".")]
+    (keyword no-extension)))
+
 (defn load-jdns
   "given a path to a directory, find all jdn files and create bindings"
   [path args]
@@ -28,7 +36,7 @@
                  jdn-files (->> dir-filenames
                              (filter (partial string/has-suffix? ".jdn"))
                              (map (fn [filename]
-                                    [filename
+                                    [(remove-extension filename)
                                      (jdn/decode
                                        (slurp
                                          (string path "/" filename)))])))
@@ -37,13 +45,25 @@
       :env {} #(print "bind individual files to env itself. Namespaced to the directory.")
       {})))
 
-(defn check-jdns-dir
-  [path]
-  (if (= path "statement-formats")
-    path))
+(defn literal-path
+  [literal-path path]
+  (if (= path literal-path) path))
+
+(defn add-path
+  "Helper function to add a specific directory path to module paths.
+  This is necessary because if strings were passed to module/paths,
+  janet would automatically look for janet files."
+  [path-to-dir]
+  (array/push module/paths [(partial literal-path path-to-dir) :jdns])
+  )
+
+## (defn check-jdns-dir
+##   [path]
+##   (if (= path "statement-formats")
+##     path))
 
 (module/add-paths ".jdn" :jdn)
-(array/push module/paths [check-jdns-dir :jdns])
+## (array/push module/paths [check-jdns-dir :jdns])
 (put module/loaders :jdn load-jdn2)
 (put module/loaders :jdns load-jdns)
 

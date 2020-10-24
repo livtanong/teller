@@ -1,10 +1,11 @@
 (import jdn)
 (import argparse)
-(import ./statement-formats/bdo)
-(import ./jdn-loader)
+(import jdn-loader)
+(jdn-loader/add-path "statement-formats")
+## (array/push module/paths [(fn [path] (if (= path "statement-formats") path)) :jdns])
+(import statement-formats :jdn-loader/binding-type :map)
 
-(def statement-format-dict
-  {:bdo bdo/format})
+(def statement-format-dict statement-formats/jdns)
 
 (def argparse-params
   ["foo bar"
