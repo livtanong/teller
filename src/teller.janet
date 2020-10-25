@@ -1,18 +1,13 @@
 (import jdn)
 (import argparse)
 (import jdn-loader)
-(jdn-loader/add-path "statement-formats")
-## (array/push module/paths [(fn [path] (if (= path "statement-formats") path)) :jdns])
-(import statement-formats :jdn-loader/binding-type :map)
-
-(def statement-format-dict statement-formats/jdns)
+(import jdn::statement-formats :jdn-loader/binding-type :struct)
 
 (def argparse-params
-  ["foo bar"
+  ["teller CLI"
    "config" {:kind :option
              :short "c"
-             :help "The path to the config file."
-            }
+             :help "The path to the config file."}
    "format" {:kind :option
              :short "f"
              :help "The path to the format jdn."}
@@ -93,8 +88,6 @@
         parsed-soa)
    "\n"))
 
-#(spit "out.tsv" (data->tsv (peg/match soa-grammar (read-pdf "250107"))))
-
 (defn main [& args]
   (with-dyns [:args args]
     (let [res (argparse/argparse (splice argparse-params))]
@@ -107,7 +100,7 @@
             output-path (get res "output")
             config-path (get res "config" default-config-path)
             config (jdn/decode (slurp config-path))
-            statement-format (get statement-format-dict (get config :statement-format))
+            statement-format (get jdn::statement-formats/jdns (get config :statement-format))
             statement-grammar (table/to-struct
                                (merge base-grammar statement-format))
             pdf-text (read-pdf input-path "")
