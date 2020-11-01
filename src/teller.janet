@@ -1,7 +1,19 @@
 (import jdn)
 (import argparse)
+(import path)
 (import jdn-loader)
 (import jdn::statement-formats :jdn-loader/binding-type :struct)
+
+(def- ext-peg
+  (peg/compile ~{:back (> -1 (+ (* ($) (set "\\/.")) :back))
+                 :main :back}))
+
+(defn split-filename
+  [path]
+  (if-let [m (peg/match ext-peg path (length path))]
+    (let [i (m 0)]
+      (if (= (path i) 46)
+        (string/split "." path i 2)))))
 
 (def argparse-params
   ["teller CLI"
@@ -79,9 +91,6 @@
   (let [padded-row (pad-array tuple-row 5 "")]
     (string/join padded-row "\t")))
 
-#(render-row @["07/25/20" "09/01/20" "FOOD PANDA MAKATI PHL" "-1,525.99" "Reference: 1"])
-#(render-row @["07/25/20" "09/01/20" "FOOD PANDA MAKATI PHL" "-1,525.99"])
-
 (defn data->tsv [parsed-soa]
   (string/join
    (map render-row
@@ -97,9 +106,23 @@
             default-config-path (os/getenv "TELLER_CONFIG" (string home-path "/.config/teller/config.jdn"))
             format-key (get res "format")
             input-path (get res "input")
-            output-path (get res "output")
             config-path (get res "config" default-config-path)
             config (jdn/decode (slurp config-path))
+            statement-dir (get config :statement-dir)
+            output-path (get res "output"
+                          (if statement-dir
+                            (let [input-filename (path/basename input-path)
+                                  input-ext (path/ext input-filename)
+                                  no-ext (if (string/has-suffix? input-ext input-filename)
+                                           (first (split-filename input-filename))
+                                           input-filename)]
+                              (string statement-dir "/" no-ext ".tsv"))
+                            (let [files-in-statement-dir (os/dir statement-dir)]
+                              # TODO: autoincrement
+                              # Filter all files whose prefix is out and suffix is .tsv.
+                              # Split each file such that given some form `out-n.tsv`, n is separated and parsed as an int
+                              # Get the highest int, then increment.
+                              (string statement-dir "/" "out.tsv"))))
             statement-format (get jdn::statement-formats/jdns (get config :statement-format))
             statement-grammar (table/to-struct
                                (merge base-grammar statement-format))
