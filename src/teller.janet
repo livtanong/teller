@@ -20,16 +20,19 @@
    "config" {:kind :option
              :short "c"
              :help "The path to the config file. "}
-   "format" {:kind :option
-             :short "f"
-             :help "The path to the format jdn."}
    "input" {:kind :option
             :short "i"
-            :help "Optional. The path to the input file. Must be a pdf. If not provided, will look in config file."
+            :help "Required. The path to the input file. Must be a pdf."
             :required true}
    "output" {:kind :option
              :short "o"
-             :help "Optional. The path to the output file. Must be a tsv. If not provided, will print to STDOUT"}])
+             :help "Optional. The path to the output file. Must be a tsv. If not provided but statement-dir is defined in config, output to a file of the same input name there. Otherwise, prints to stdout."}
+   "password" {:kind :option
+               :short "p"
+               :help "Optional. If pdf is password protected, unlocks the pdf for this session. Essential if you want to pipe stdout to a file."}
+   "stdout" {:kind :flag
+             :short "s"
+             :help "If flagged, prints to stdout even if output is defined."}])
 
 (defn run-cmd [args]
   (let [out-temp-file (file/temp)
@@ -104,14 +107,15 @@
       (unless res
         (os/exit 1))
       (let [home-path (os/getenv "HOME")
-            default-config-path (os/getenv "TELLER_CONFIG" (string home-path "/.config/teller/config.jdn"))
-            format-key (get res "format")
             input-path (get res "input")
-            config-path (get res "config" default-config-path)
+            stdout? (get res "stdout")
+            password (or (get res "password") (os/getenv "TELLER_PDF_PASSWORD") "")
+            config-path (or (get res "config") (os/getenv "TELLER_CONFIG_PATH") (string home-path "/.config/teller/config.jdn"))
             config (try (jdn/decode (slurp config-path))
                         ([err fiber]
                          {}))
-            statement-dir (get config :statement-dir)
+            statement-format (or (get res "statement-format") (get config :statement-format) (os/getenv "TELLER_STATEMENT_FORMAT") :bdo)
+            statement-dir (or (get res "statement-dir") (get config :statement-dir) (os/getenv "TELLER_STATEMENT_DIR"))
             output-path (get res "output"
                           (if statement-dir
                             (let [input-filename (path/basename input-path)
@@ -126,15 +130,14 @@
                               # Split each file such that given some form `out-n.tsv`, n is separated and parsed as an int
                               # Get the highest int, then increment.
                               (string statement-dir "/" "out.tsv"))))
-            statement-format-key (get config :statement-format :bdo)
-            statement-format (get jdn::statement-formats/jdns statement-format-key)
+            statement-format-peg (get jdn::statement-formats/jdns statement-format)
             statement-grammar (table/to-struct
-                               (merge base-grammar statement-format))
-            pdf-text (read-pdf input-path "")
+                               (merge base-grammar statement-format-peg))
+            pdf-text (read-pdf input-path password)
             parsed-soa (peg/match statement-grammar pdf-text)
             output-text (data->tsv parsed-soa)]
-        (if output-path
-          (spit output-path output-text)
-          output-text)))))
+        (if (or stdout? (not output-path))
+          (print output-text)
+          (spit output-path output-text))))))
 
 #(main "teller" "--input" "/mnt/c/Users/Levi/Downloads/statement.pdf")
