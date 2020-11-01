@@ -44,7 +44,7 @@ jobs:
       - name: set JANET_HEADERPATH
         run: echo "::set-env name=JANET_HEADERPATH::janet-${{ steps.janet-ver.outputs.tag }}-linux"
       - name: debug cwd
-        run: pwd
+        run: ls
       - name: install dependencies
         run: /usr/bin/env jpm deps
       - name: run tests
