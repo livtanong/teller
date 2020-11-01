@@ -19,13 +19,14 @@
   ["teller CLI"
    "config" {:kind :option
              :short "c"
-             :help "The path to the config file."}
+             :help "The path to the config file. "}
    "format" {:kind :option
              :short "f"
              :help "The path to the format jdn."}
    "input" {:kind :option
             :short "i"
-            :help "Optional. The path to the input file. Must be a pdf. If not provided, will look in config file."}
+            :help "Optional. The path to the input file. Must be a pdf. If not provided, will look in config file."
+            :required true}
    "output" {:kind :option
              :short "o"
              :help "Optional. The path to the output file. Must be a tsv. If not provided, will print to STDOUT"}])
@@ -107,7 +108,9 @@
             format-key (get res "format")
             input-path (get res "input")
             config-path (get res "config" default-config-path)
-            config (jdn/decode (slurp config-path))
+            config (try (jdn/decode (slurp config-path))
+                        ([err fiber]
+                         {}))
             statement-dir (get config :statement-dir)
             output-path (get res "output"
                           (if statement-dir
@@ -123,7 +126,8 @@
                               # Split each file such that given some form `out-n.tsv`, n is separated and parsed as an int
                               # Get the highest int, then increment.
                               (string statement-dir "/" "out.tsv"))))
-            statement-format (get jdn::statement-formats/jdns (get config :statement-format))
+            statement-format-key (get config :statement-format :bdo)
+            statement-format (get jdn::statement-formats/jdns statement-format-key)
             statement-grammar (table/to-struct
                                (merge base-grammar statement-format))
             pdf-text (read-pdf input-path "")
