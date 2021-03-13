@@ -123,7 +123,7 @@
                                   no-ext (if (string/has-suffix? input-ext input-filename)
                                            (first (split-filename input-filename))
                                            input-filename)]
-                              (string statement-dir "/" no-ext ".tsv"))
+                              (string statement-dir "/" (string/replace " " "_" no-ext) ".tsv"))
                             (let [files-in-statement-dir (os/dir statement-dir)]
                               # TODO: autoincrement
                               # Filter all files whose prefix is out and suffix is .tsv.
