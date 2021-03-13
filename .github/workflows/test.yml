@@ -26,7 +26,7 @@ jobs:
         uses: oprypin/find-latest-tag@v1
         with:
           repository: janet-lang/janet
-          releases_only: true
+          releases-only: true
           prefix: 'v'
       - name: download janet
         run: curl -LO https://github.com/janet-lang/janet/releases/download/${{ steps.janet-ver.outputs.tag }}/janet-${{ steps.janet-ver.outputs.tag }}-linux.tar.gz
