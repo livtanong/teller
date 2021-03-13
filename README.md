@@ -3,5 +3,5 @@
 ## Usage
 
 ```sh
-build/teller -f "soa-formats/bdo.jdn" -i "/mnt/c/Users/Levi/Downloads/statement.pdf" -o "out.tsv"
+build/teller -i $PATH_TO_PDF_STATEMENT -o $PATH_TO_TSV_OUTPUT
 ```
