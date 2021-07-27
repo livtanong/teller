@@ -32,12 +32,14 @@ jobs:
         run: curl -LO https://github.com/janet-lang/janet/releases/download/${{ steps.janet-ver.outputs.tag }}/janet-${{ steps.janet-ver.outputs.tag }}-linux.tar.gz
       - name: extract janet
         run: tar -xvzf janet-${{ steps.janet-ver.outputs.tag }}-linux.tar.gz
-      # - name: add directory to path
-      #   run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux" >> $GITHUB_PATH
+      - name: add directory to path
+        run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux" >> $GITHUB_PATH
       # - name: add bin directory to path
       #   run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux/bin" >> $GITHUB_PATH
       - name: make modules directory
         run: mkdir modules
+      # - name: set JANET_PATH
+      #   run: echo "JANET_PATH=modules" >> $GITHUB_ENV
       - name: set JANET_PATH
         run: echo "JANET_PATH=janet-${{ steps.janet-ver.outputs.tag }}-linux/bin" >> $GITHUB_ENV
       - name: set JANET_LIBPATH
@@ -45,6 +47,8 @@ jobs:
       - name: set JANET_HEADERPATH
         run: echo "JANET_HEADERPATH=janet-${{ steps.janet-ver.outputs.tag }}-linux/include" >> $GITHUB_ENV
       - name: install dependencies
-        run: /usr/bin/env jpm deps
+        # run: /usr/bin/env jpm deps
+        run: $JANET_PATH/jpm deps
       - name: run tests
-        run: /usr/bin/env jpm test
+        # run: /usr/bin/env jpm test
+        run: $JANET_PATH/jpm test
