@@ -34,6 +34,8 @@ jobs:
         run: tar -xvzf janet-${{ steps.janet-ver.outputs.tag }}-linux.tar.gz
       - name: add directory to path
         run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux" >> $GITHUB_PATH
+      - name: add bin directory to path
+        run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux/bin" >> $GITHUB_PATH
       - name: make modules directory
         run: mkdir modules
       - name: set JANET_PATH
