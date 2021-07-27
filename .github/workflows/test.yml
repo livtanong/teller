@@ -32,14 +32,14 @@ jobs:
         run: curl -LO https://github.com/janet-lang/janet/releases/download/${{ steps.janet-ver.outputs.tag }}/janet-${{ steps.janet-ver.outputs.tag }}-linux.tar.gz
       - name: extract janet
         run: tar -xvzf janet-${{ steps.janet-ver.outputs.tag }}-linux.tar.gz
-      - name: add directory to path
-        run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux" >> $GITHUB_PATH
-      - name: add bin directory to path
-        run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux/bin" >> $GITHUB_PATH
+      # - name: add directory to path
+      #   run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux" >> $GITHUB_PATH
+      # - name: add bin directory to path
+      #   run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux/bin" >> $GITHUB_PATH
       - name: make modules directory
         run: mkdir modules
       - name: set JANET_PATH
-        run: echo "JANET_PATH=modules" >> $GITHUB_ENV
+        run: echo "JANET_PATH=janet-${{ steps.janet-ver.outputs.tag }}-linux/bin" >> $GITHUB_ENV
       - name: set JANET_LIBPATH
         run: echo "JANET_LIBPATH=janet-${{ steps.janet-ver.outputs.tag }}-linux/lib" >> $GITHUB_ENV
       - name: set JANET_HEADERPATH
