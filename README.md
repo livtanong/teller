@@ -18,3 +18,6 @@ jpm install
 
 # Debugging
 pdftotext -nopgbrk -layout -upw $PASSWORD $PATH_TO_PDF -   
+
+# Roadmap
+- [ ] Breaking change: Dates should normalize to ISO.
