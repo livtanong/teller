@@ -1,9 +1,0 @@
-* Usage
-~teller --input "path/to/statement.pdf" --password "xxx" --input-date-format="yyyy/mm/dd"~
-* Teller-mode
-** Usage
-- Move the teller executable into path.
-* Development
-In the repl:
-~(asdf:load-system :teller)~
-~(in-package :teller)~
