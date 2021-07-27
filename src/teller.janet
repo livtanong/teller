@@ -40,33 +40,33 @@
         exit-code (os/execute args :p {:err err-temp-file :out out-temp-file})]
     (file/seek out-temp-file :set 0)
     (file/seek err-temp-file :set 0)
-    {:exit-code exit-code 
-     :err (file/read err-temp-file :all) 
+    {:exit-code exit-code
+     :err (file/read err-temp-file :all)
      :out (file/read out-temp-file :all)}))
 
 (def base-grammar
   '{:mm (choice (sequence "0" (range "19"))
-          (sequence "1" (range "02")))
-  :yy (sequence :d :d)
-  :yyyy (sequence :d :d :d :d)
-  :dd (choice (sequence "0" :d)
-        (sequence (range "12") :d)
-        (sequence "3" (range "01")))
-  :/ (set "/-")
-  :yyyy-mm-dd (sequence :yyyy :/ :mm :/ :dd)
-  :dd-mm-yyyy (sequence :dd :/ :mm :/ :yyyy)
-  :mm-dd-yyyy (sequence :mm :/ :dd :/ :yyyy)
-  :mm-dd-yy (sequence :mm :/ :dd :/ :yy)
-  :yy-mm-dd (sequence :yy :/ :mm :/ :dd)
-  :financial-figure (sequence
-                      (? "-")
-                      (at-most 3 :d)
-                      (any (sequence
-                             ","
-                             (repeat 3 :d)))
-                      "."
-                      (some :d))
-  :simple-phrase (sequence (some :S) (any (sequence :s (some :S))))})
+                (sequence "1" (range "02")))
+    :yy (sequence :d :d)
+    :yyyy (sequence :d :d :d :d)
+    :dd (choice (sequence "0" :d)
+                (sequence (range "12") :d)
+                (sequence "3" (range "01")))
+    :/ (set "/-")
+    :yyyy-mm-dd (sequence :yyyy :/ :mm :/ :dd)
+    :dd-mm-yyyy (sequence :dd :/ :mm :/ :yyyy)
+    :mm-dd-yyyy (sequence :mm :/ :dd :/ :yyyy)
+    :mm-dd-yy (sequence :mm :/ :dd :/ :yy)
+    :yy-mm-dd (sequence :yy :/ :mm :/ :dd)
+    :financial-figure (sequence
+                        (? "-")
+                        (at-most 3 :d)
+                        (any (sequence
+                               ","
+                               (repeat 3 :d)))
+                        "."
+                        (some :d))
+    :simple-phrase (sequence (some :S) (any (sequence :s (some :S))))})
 
 (defn read-pdf [path password]
   (let [{:exit-code exit-code
@@ -77,8 +77,8 @@
       (= exit-code 0) out
       (and (not= exit-code 0)
            (string/find "Command Line Error: Incorrect password" err)) (do (print "prompt for password")
-                                                                           (getline "Password: " password-buffer)
-                                                                           (read-pdf path (string/trimr (string/slice password-buffer) "\n")))
+                                                                         (getline "Password: " password-buffer)
+                                                                         (read-pdf path (string/trimr (string/slice password-buffer) "\n")))
       :else (do (print "lol some other error")))))
 
 (defn pad-array
@@ -87,19 +87,29 @@
   (default padding nil)
   (let [diff (- n (length arr))]
     (repeat diff
-            (array/push arr padding))
+      (array/push arr padding))
     arr))
 
 (defn render-row
   [tuple-row]
-  (let [padded-row (pad-array tuple-row 5 "")]
-    (string/join padded-row "\t")))
+  (string/join tuple-row "\t"))
 
 (defn data->tsv [parsed-soa]
   (string/join
-   (map render-row
-        parsed-soa)
-   "\n"))
+    (map render-row
+         parsed-soa)
+    "\n"))
+
+(defn parse-soa
+  "Normalize \\xE2\\x80\\x90 into '-' before running peg/match."
+  [statement-grammar text]
+  (let [normalized-pdf-text (string/replace-all "\xE2\x80\x90" "-" text)
+        parsed-soa (peg/match statement-grammar normalized-pdf-text)]
+    (map (fn [tuple-row]
+           (let [[date1 date2 desc1 amount desc2] (pad-array tuple-row 5 "")
+                 rearranged-row [date1 date2 desc1 desc2 amount]]
+             rearranged-row)) 
+        parsed-soa)))
 
 (defn main [& args]
   (with-dyns [:args args]
@@ -112,32 +122,33 @@
             password (or (get res "password") (os/getenv "TELLER_PDF_PASSWORD") "")
             config-path (or (get res "config") (os/getenv "TELLER_CONFIG_PATH") (string home-path "/.config/teller/config.jdn"))
             config (try (jdn/decode (slurp config-path))
-                        ([err fiber]
-                         {}))
+                     ([err fiber]
+                       {}))
             statement-format (or (get res "statement-format") (get config :statement-format) (os/getenv "TELLER_STATEMENT_FORMAT") :bdo)
             statement-dir (or (get res "statement-dir") (get config :statement-dir) (os/getenv "TELLER_STATEMENT_DIR"))
             output-path (get res "output"
-                          (if statement-dir
-                            (let [input-filename (path/basename input-path)
-                                  input-ext (path/ext input-filename)
-                                  no-ext (if (string/has-suffix? input-ext input-filename)
-                                           (first (split-filename input-filename))
-                                           input-filename)]
-                              (string statement-dir "/" (string/replace " " "_" no-ext) ".tsv"))
-                            (let [files-in-statement-dir (os/dir statement-dir)]
-                              # TODO: autoincrement
-                              # Filter all files whose prefix is out and suffix is .tsv.
-                              # Split each file such that given some form `out-n.tsv`, n is separated and parsed as an int
-                              # Get the highest int, then increment.
-                              (string statement-dir "/" "out.tsv"))))
+                             (if statement-dir
+                               (let [input-filename (path/basename input-path)
+                                     input-ext (path/ext input-filename)
+                                     no-ext (if (string/has-suffix? input-ext input-filename)
+                                              (first (split-filename input-filename))
+                                              input-filename)]
+                                 (string statement-dir "/" (string/replace " " "_" no-ext) ".tsv"))
+                               (let [files-in-statement-dir (os/dir statement-dir)]
+                                 # TODO: autoincrement
+                                 # Filter all files whose prefix is out and suffix is .tsv.
+                                 # Split each file such that given some form `out-n.tsv`, n is separated and parsed as an int
+                                 # Get the highest int, then increment.
+                                 (string statement-dir "/" "out.tsv"))))
             statement-format-peg (get jdn::statement-formats/jdns statement-format)
             statement-grammar (table/to-struct
-                               (merge base-grammar statement-format-peg))
+                                (merge base-grammar statement-format-peg))
             pdf-text (read-pdf input-path password)
-            parsed-soa (peg/match statement-grammar pdf-text)
+            parsed-soa (parse-soa statement-grammar pdf-text)
             output-text (data->tsv parsed-soa)]
         (if (or stdout? (not output-path))
           (print output-text)
           (spit output-path output-text))))))
 
-#(main "teller" "--input" "/mnt/c/Users/Levi/Downloads/statement.pdf")
+#(main "teller" "--input" "/mnt/c/Users/Levi/Downloads/210719 - GOLD MASTERCARD - 111060000107102.pdf")
+
