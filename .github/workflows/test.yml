@@ -1,0 +1,50 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  test:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      - name: find latest version of janet
+        id: janet-ver
+        uses: oprypin/find-latest-tag@v1
+        with:
+          repository: janet-lang/janet
+          releases-only: true
+          prefix: 'v'
+      - name: download janet
+        run: curl -LO https://github.com/janet-lang/janet/releases/download/${{ steps.janet-ver.outputs.tag }}/janet-${{ steps.janet-ver.outputs.tag }}-linux.tar.gz
+      - name: extract janet
+        run: tar -xvzf janet-${{ steps.janet-ver.outputs.tag }}-linux.tar.gz
+      # - name: add directory to path
+      #   run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux" >> $GITHUB_PATH
+      - name: add bin directory to path
+        run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux/bin" >> $GITHUB_PATH
+      - name: make modules directory
+        run: mkdir modules
+      - name: set JANET_PATH
+        run: echo "JANET_PATH=modules" >> $GITHUB_ENV
+      - name: set JANET_LIBPATH
+        run: echo "JANET_LIBPATH=janet-${{ steps.janet-ver.outputs.tag }}-linux/lib" >> $GITHUB_ENV
+      - name: set JANET_HEADERPATH
+        run: echo "JANET_HEADERPATH=janet-${{ steps.janet-ver.outputs.tag }}-linux/include" >> $GITHUB_ENV
+      - name: install dependencies
+        run: /usr/bin/env jpm deps
+      - name: run tests
+        run: /usr/bin/env jpm test
