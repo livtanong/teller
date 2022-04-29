@@ -29,7 +29,7 @@ jobs:
           releases-only: true
           prefix: 'v'
       - name: download janet
-        run: curl -LO https://github.com/janet-lang/janet/releases/download/${{ steps.janet-ver.outputs.tag }}/janet-${{ steps.janet-ver.outputs.tag }}-linux.tar.gz
+        run: curl -LO https://github.com/janet-lang/janet/releases/download/${{ steps.janet-ver.outputs.tag }}/janet-${{ steps.janet-ver.outputs.tag }}-linux-x64.tar.gz
       - name: extract janet
         run: tar -xvzf janet-${{ steps.janet-ver.outputs.tag }}-linux.tar.gz
       # - name: add directory to path
