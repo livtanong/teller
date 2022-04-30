@@ -108,13 +108,20 @@
   "Normalize \\xE2\\x80\\x90 into '-' before running peg/match."
   [statement-grammar text]
   (let [normalized-pdf-text (string/replace-all "\xE2\x80\x90" "-" text)
-        parsed-soa (peg/match statement-grammar normalized-pdf-text)
-        cleaned-soa (filter array? parsed-soa)]
+        {:pattern statement-pattern
+         :entry-keys entry-keys} statement-grammar
+        parsed-soa (peg/match statement-pattern normalized-pdf-text)]
     (map (fn [tuple-row]
-           (let [[date1 date2 desc1 amount desc2] (pad-array tuple-row 5 "")
+           (let [entry (zipcoll entry-keys tuple-row)
+                 {:date1 date1
+                  :date2 date2
+                  :desc1 desc1
+                  :desc2 desc2
+                  :amount amount} entry
                  rearranged-row [date1 date2 desc1 desc2 amount]]
-             rearranged-row))
-         cleaned-soa)))
+             (map (fn [cell] (string "\"" cell "\""))
+                  rearranged-row)))
+         parsed-soa)))
 
 (defn main [& args]
   (with-dyns [:args args]
@@ -146,8 +153,10 @@
                                  # Get the highest int, then increment.
                                  (string statement-dir "/" "out.tsv"))))
             statement-format-peg (get jdn::statement-formats/jdns statement-format)
-            statement-grammar (table/to-struct
-                                (merge base-grammar statement-format-peg))
+            statement-grammar (update (struct/to-table statement-format-peg)
+                                      :pattern
+                                 (fn [pattern]
+                                   (merge base-grammar pattern)))
             pdf-text (read-pdf input-path password)
             parsed-soa (parse-soa statement-grammar pdf-text)
             output-text (data->tsv parsed-soa)]

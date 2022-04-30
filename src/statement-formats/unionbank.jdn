@@ -1,21 +1,22 @@
-{:date :mm-dd-yyyy
- :description :simple-phrase
- :space-or-tab (set " \t")
- :amount :financial-figure
- :simple-entry (sequence
-                 (capture :date :date1)
-                 (some :space-or-tab)
-                 (capture :date :date2)
-                 (some :space-or-tab)
-                 (capture :description :description)
-                 (some :space-or-tab)
-                 (capture :amount :amount))
- :multiline-entry (sequence
-                   :simple-entry
-                   :s*
-                   (if-not (choice :simple-entry
-                              "SUBTOTAL"
-                              "Credit Card Statement of Account")
-                     (capture :description)))
- :entry (thru (group (choice :multiline-entry :simple-entry)))
- :main (thru (some :entry))}
+{:pattern {:date :mm-dd-yyyy
+             :description :simple-phrase
+             :space-or-tab (set " \t")
+           :amount :financial-figure
+             :simple-entry (sequence
+                            (capture :date :date1)
+                            (some :space-or-tab)
+                            (capture :date :date2)
+                            (some :space-or-tab)
+                            (capture :description :description)
+                            (some :space-or-tab)
+                            (capture :amount :amount))
+           :multiline-entry (sequence
+                             :simple-entry
+                               :s*
+                               (if-not (choice :simple-entry
+                                          "SUBTOTAL"
+                                          "Credit Card Statement of Account")
+                                 (capture :description)))
+           :entry (thru (group (choice :multiline-entry :simple-entry)))
+           :main (thru (some :entry))}
+ :entry-key [:date1 :date2 :desc1 :amount :desc2]}
