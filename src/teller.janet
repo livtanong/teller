@@ -35,7 +35,10 @@
              :help "If flagged, prints to stdout even if output is defined."}
    "statement-format" {:kind :option
                        :short "f"
-                       :help "Optional. If provided, will override the corresponding field in config."}])
+                       :help "Optional. If provided, will override the corresponding field in config."}
+   "csv-delimiter" {:kind :option
+                    :short "d"
+                    :help "The character used as a delimiter for the output csv."}])
 
 (defn run-cmd [args]
   (let [out-temp-file (file/temp)
@@ -72,6 +75,13 @@
     :non-newline-whitespace (set " \t\0\f\v")
     :simple-phrase (sequence (some :S) (any (sequence :non-newline-whitespace (some :S))))})
 
+(defn with-base-grammar
+  [grammar-config]
+  (update grammar-config
+          :pattern
+     (fn [pattern]
+       (merge base-grammar pattern))))
+
 (defn read-pdf [path password]
   (let [{:exit-code exit-code
          :err err
@@ -95,14 +105,14 @@
     arr))
 
 (defn render-row
-  [tuple-row]
-  (string/join tuple-row "\t"))
+  [delimiter tuple-row]
+  (string/join tuple-row delimiter))
 
-(defn data->tsv [parsed-soa]
+(defn data->tsv [delimiter parsed-soa]
   (string/join
-    (map render-row
+   (map (partial render-row delimiter)
          parsed-soa)
-    "\n"))
+   "\n"))
 
 (defn parse-soa
   "Normalize \\xE2\\x80\\x90 into '-' before running peg/match."
@@ -132,7 +142,8 @@
             input-path (get res "input")
             stdout? (get res "stdout")
             password (or (get res "password")
-                         (os/getenv "TELLER_PDF_PASSWORD") "")
+                         (os/getenv "TELLER_PDF_PASSWORD")
+                         "")
             config-path (or (get res "config")
                             (os/getenv "TELLER_CONFIG_PATH")
                             (string home-path "/.config/teller/config.jdn"))
@@ -141,10 +152,15 @@
                        {}))
             statement-format (or (keyword (get res "statement-format"))
                                  (get config :statement-format)
-                                 (os/getenv "TELLER_STATEMENT_FORMAT") :bdo)
+                                 (os/getenv "TELLER_STATEMENT_FORMAT")
+                                 :bdo)
             statement-dir (or (get res "statement-dir")
                               (get config :statement-dir)
                               (os/getenv "TELLER_STATEMENT_DIR"))
+            delimiter-character (or (get res "csv-delimiter")
+                                    (get config :csv-delimiter)
+                                    (os/getenv "TELLER_CSV_DELIMITER")
+                                    ",")
             output-path (get res "output"
                              (if statement-dir
                                (let [input-filename (path/basename input-path)
@@ -160,13 +176,10 @@
                                  # Get the highest int, then increment.
                                  (string statement-dir "/" "out.tsv"))))
             statement-format-peg (get jdn::statement-formats/jdns statement-format)
-            statement-grammar (update (struct/to-table statement-format-peg)
-                                      :pattern
-                                 (fn [pattern]
-                                   (merge base-grammar pattern)))
+            statement-grammar (with-base-grammar (struct/to-table statement-format-peg))
             pdf-text (read-pdf input-path password)
             parsed-soa (parse-soa statement-grammar pdf-text)
-            output-text (data->tsv parsed-soa)]
+            output-text (data->tsv delimiter-character parsed-soa)]
         (if (or stdout? (not output-path))
           (print output-text)
           (spit output-path output-text))))))
