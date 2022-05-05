@@ -119,18 +119,15 @@
   [statement-grammar text]
   (let [normalized-pdf-text (string/replace-all "\xE2\x80\x90" "-" text)
         {:pattern statement-pattern
-         :entry-keys entry-keys} statement-grammar
+         :entry-keys entry-keys
+         :rearrange rearrange} statement-grammar
         parsed-soa (peg/match statement-pattern normalized-pdf-text)]
     (map (fn [tuple-row]
-           (let [entry (zipcoll entry-keys tuple-row)
-                 {:date1 date1
-                  :date2 date2
-                  :desc1 desc1
-                  :desc2 desc2
-                  :amount amount} entry
-                 rearranged-row [date1 date2 desc1 desc2 amount]]
-             (map (fn [cell] (string "\"" cell "\""))
-                  rearranged-row)))
+           (let [entry (zipcoll entry-keys tuple-row)]
+             (map (fn [rearrange-key]
+                    (let [cell (get entry rearrange-key)]
+                      (string "\"" cell "\"")))
+                  (or rearrange entry-keys))))
          parsed-soa)))
 
 (defn main [& args]

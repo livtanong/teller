@@ -15,7 +15,11 @@
                           (some :space-or-tab)
                           (capture :reference-number :reference-number)
                           (some :space-or-tab)
-                          (capture :description :description)
+                          (capture :simple-phrase :description)
+                          (some :space-or-tab)
+                          (capture :simple-phrase :city)
+                          (some :space-or-tab)
+                          (capture :simple-phrase :country)
                           (some :space-or-tab)
                           (capture :amount :amount))
            :multiline-entry (sequence
@@ -24,4 +28,5 @@
                                (if-not :simple-entry (capture :description)))
            :entry (choice (group (choice :multiline-entry :simple-entry)) 1)
            :main (choice (some :entry) 1)}
- :entry-keys [:date1 :date2 :desc2 :desc1 :amount]}
+ :entry-keys [:date1 :date2 :refnum :description :city :country :amount]
+ :rearrange [:date1 :date2 :description :city :country :refnum :amount]}
