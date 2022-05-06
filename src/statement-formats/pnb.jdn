@@ -1,32 +1,90 @@
-{:pattern {:date (sequence :dd :/ :mm)
-           :description (sequence
-                         :simple-phrase
-                           (some :space-or-tab)
-                           :simple-phrase
-                           (some :space-or-tab)
-                           :simple-phrase)
-           :space-or-tab (set " \t")
-           :amount :financial-figure
-             :reference-number (some :d)
-           :simple-entry (sequence
-                          (capture :date :date1)
-                          (some :space-or-tab)
-                          (capture :date :date2)
-                          (some :space-or-tab)
-                          (capture :reference-number :reference-number)
-                          (some :space-or-tab)
-                          (capture :simple-phrase :description)
-                          (some :space-or-tab)
-                          (capture :simple-phrase :city)
-                          (some :space-or-tab)
-                          (capture :simple-phrase :country)
-                          (some :space-or-tab)
-                          (capture :amount :amount))
-           :multiline-entry (sequence
-                             :simple-entry
-                               :s*
-                               (if-not :simple-entry (capture :description)))
-           :entry (choice (group (choice :multiline-entry :simple-entry)) 1)
-           :main (choice (some :entry) 1)}
- :entry-keys [:date1 :date2 :refnum :description :city :country :amount]
- :rearrange [:date1 :date2 :description :city :country :refnum :amount]}
+{:entries {:grammar {:date (group (sequence
+                                   (constant :type/date)
+                                   (capture :dd)
+                                   :/
+                                     (capture :mm)))
+                     :space-or-tab (set " \t")
+                     :amount :financial-figure
+                     :reference-number (some :d)
+                     :non-space-whitespace (set "\t\r\n\0\f\v")
+                     :ascii-with-space (if-not :non-space-whitespace 1)
+                     :country-code (sequence :a :a :a)
+                     # TODO: fix ramnode support
+                     # TODO: fix timescale support
+                     # TODO: cheque payment
+                     :simple-entry (sequence
+                                    :date
+                                      (some :space-or-tab)
+                                      :date
+                                      (some :space-or-tab)
+                                      (capture :reference-number :reference-number)
+                                      (some :space-or-tab)
+                                      # TODO: Both ramnode and timescale support are hindered by the fact that only
+                                      # one space separates the description from the city column.
+                                      # This means that the city column gets captured as part of description
+                                      # and the rest of the entry doesn't match.
+
+                                      (choice
+                                       # For cases where description is so long that only one space separates the description from
+                                       # the city column. This means that the city column gets captured as part of the description
+                                       # and the rest of the entry doesn't match.
+                                       (if (sequence :simple-phrase (some :space-or-tab) :country-code (some :space-or-tab) :amount)
+                                         (capture 22))
+                                       # Even rarer case where both description and city are so long they merge with the country.
+                                       # Implementation just captures 22 because it advances that many spaces, and lets the succeeding
+                                       # patterns take over.
+                                       (if (sequence :simple-phrase (some :space-or-tab) :amount)
+                                         (capture 22))
+                                       # Captures the expected case.
+                                       (if (sequence :simple-phrase (some :space-or-tab) :simple-phrase (some :space-or-tab) :country-code (some :space-or-tab) :amount)
+                                         (capture :simple-phrase))
+                                       # Captures the case where description is as expected but city and country code have no separation.
+                                       (if (sequence :simple-phrase (some :space-or-tab) :simple-phrase (some :space-or-tab) :amount)
+                                         (capture :simple-phrase)))
+                                      (some :space-or-tab)
+                                      (choice
+                                       # For cases where
+                                       (if (sequence (some :S) (some :space-or-tab) :country-code (some :space-or-tab) :amount)
+                                         (sequence
+                                          (capture (some :S))
+                                          (some :space-or-tab)
+                                          (capture :country-code)))
+                                       # For cases where the city spans 13 characters,
+                                       # leaving no white space to separate city and country code.
+                                       (if (sequence :simple-phrase (some :space-or-tab) :amount)
+                                         (sequence
+                                          (capture 13)
+                                          (capture :country-code)))
+
+                                       (if-not (sequence :simple-phrase (some :space-or-tab) :amount)
+                                         (sequence
+                                          (capture :simple-phrase :city)
+                                          (some :space-or-tab)
+                                          (capture :simple-phrase :country)))
+                                       )
+                                      # (choice
+                                      #  (sequence
+                                      #   (constant "SAN FRANCISCO"))
+                                      #  (sequence
+                                      #   (capture :simple-phrase :city)
+                                      #   (some :space-or-tab))
+                                      #  )
+                                      
+                                      (some :space-or-tab)
+                                      (capture :amount :amount))
+                     :multiline-entry (sequence
+                                       :simple-entry
+                                         :s*
+                                         (if-not :simple-entry (capture :simple-phrase)))
+                     :entry (choice (group (sequence (constant :type/entry)
+                                                     (choice :multiline-entry :simple-entry))) 1)
+                     :main (choice (some :entry) 1)}
+           :group-keys {:type/date [:day :month]
+                        :type/entry [:date1 :date2 :refnum :description :city :country :amount :extra-description]}}
+ :filename {:grammar {:main (sequence "SOA_"
+                                      (group (sequence (constant :type/date)
+                                                       (capture :mm)
+                                                       (capture :dd)
+                                                       (capture :yyyy))))}
+            :group-keys {:type/date [:month :day :year]
+                         :main [:teller/statement-date]}}}

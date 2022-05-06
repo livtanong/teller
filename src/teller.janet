@@ -73,14 +73,20 @@
                         "."
                         (some :d))
     :non-newline-whitespace (set " \t\0\f\v")
-    :simple-phrase (sequence (some :S) (any (sequence :non-newline-whitespace (some :S))))})
+    :simple-phrase (sequence (some :S)
+                             (any (sequence :non-newline-whitespace
+                                     (some :S))))})
 
 (defn with-base-grammar
   [grammar-config]
-  (update grammar-config
-          :pattern
-     (fn [pattern]
-       (merge base-grammar pattern))))
+  (-> grammar-config
+      (struct/to-table)
+      (update :entries struct/to-table)
+      (update :filename struct/to-table)
+      (update-in [:entries :grammar]
+                 (partial merge base-grammar))
+      (update-in [:filename :grammar]
+                 (partial merge base-grammar))))
 
 (defn read-pdf [path password]
   (let [{:exit-code exit-code
@@ -114,21 +120,60 @@
          parsed-soa)
    "\n"))
 
-(defn parse-soa
+(defn wrap-quotes [s]
+  (string "\"" s "\""))
+
+(defn parse-entries
   "Normalize \\xE2\\x80\\x90 into '-' before running peg/match."
-  [statement-grammar text]
+  [statement-facts entries-format text]
   (let [normalized-pdf-text (string/replace-all "\xE2\x80\x90" "-" text)
-        {:pattern statement-pattern
-         :entry-keys entry-keys
-         :rearrange rearrange} statement-grammar
-        parsed-soa (peg/match statement-pattern normalized-pdf-text)]
+        {:grammar entries-grammar
+         :group-keys entries-group-keys} entries-format
+        parsed-soa (peg/match entries-grammar normalized-pdf-text)
+        entry-keys (get entries-group-keys :type/entry)]
     (map (fn [tuple-row]
-           (let [entry (zipcoll entry-keys tuple-row)]
-             (map (fn [rearrange-key]
-                    (let [cell (get entry rearrange-key)]
-                      (string "\"" cell "\"")))
-                  (or rearrange entry-keys))))
+           (let [[row-type & row-rest] tuple-row
+                 entry (zipcoll entry-keys row-rest)]
+             (map (fn [key]
+                    (let [cell (get entry key)]
+                      (print "cell " cell)
+                      (if (array? cell)
+                        # Convention is that the first entry of the group
+                        # is the type declaration
+                        (let [[cell-type & rest] cell
+                              # The keys of group-formats needs to be keyed
+                              # with all the possible values of cell-type
+                              cell-keys (get entries-group-keys cell-type)]
+                          (case cell-type
+                            :type/date (let [structured-date (zipcoll cell-keys rest)
+                                             {:day day
+                                              :month month
+                                              :year year} structured-date]
+                                         (if (nil? year)
+                                           (let [assumed-year (get-in statement-facts [:filename :teller/statement-date :year])]
+                                             (wrap-quotes (string assumed-year "-" month "-" day)))
+                                           (wrap-quotes (string year "-" month "-" day))))
+                            (string "\"" (string/join rest "-") "\"")))
+                        (string "\"" cell "\""))))
+                  entry-keys)))
          parsed-soa)))
+
+(defn parse-filename
+  [filename-format text]
+  (let [{:grammar filename-grammar
+         :group-keys filename-group-keys} filename-format
+        parsed-filename (peg/match filename-grammar text)]
+    (zipcoll
+     (get filename-group-keys :main)
+     (map (fn [data]
+            (if (not (array? data))
+             data
+             (let [[cell-type & cell-rest] data
+                   cell-keys (get filename-group-keys cell-type)]
+               (assert cell-keys
+                       (error (string "Could not find cell-keys for cell-type: " cell-type ". Ensure that a group-key exists for any group prefixed with a type.")))
+               (zipcoll cell-keys cell-rest))))
+             parsed-filename))))
 
 (defn main [& args]
   (with-dyns [:args args]
@@ -158,10 +203,10 @@
                                     (get config :csv-delimiter)
                                     (os/getenv "TELLER_CSV_DELIMITER")
                                     ",")
+            input-filename (path/basename input-path)
             output-path (get res "output"
                              (if statement-dir
-                               (let [input-filename (path/basename input-path)
-                                     input-ext (path/ext input-filename)
+                               (let [input-ext (path/ext input-filename)
                                      no-ext (if (string/has-suffix? input-ext input-filename)
                                               (first (split-filename input-filename))
                                               input-filename)]
@@ -172,11 +217,18 @@
                                  # Split each file such that given some form `out-n.tsv`, n is separated and parsed as an int
                                  # Get the highest int, then increment.
                                  (string statement-dir "/" "out.tsv"))))
-            statement-format-peg (get jdn::statement-formats/jdns statement-format)
-            statement-grammar (with-base-grammar (struct/to-table statement-format-peg))
+            statement-format (-> jdn::statement-formats/jdns
+                                 (get statement-format)
+                                 (with-base-grammar))
+            filename-format (get statement-format :filename)
+            entries-format (get statement-format :entries)
+            parsed-filename (parse-filename filename-format input-filename)
+            statement-facts {:filename parsed-filename}
             pdf-text (read-pdf input-path password)
-            parsed-soa (parse-soa statement-grammar pdf-text)
-            output-text (data->tsv delimiter-character parsed-soa)]
+            _ (print pdf-text)
+            parsed-soa (parse-entries statement-facts entries-format pdf-text)
+            output-text (data->tsv delimiter-character parsed-soa)
+           ]
         (if (or stdout? (not output-path))
           (print output-text)
           (spit output-path output-text))))))
