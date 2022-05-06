@@ -25,6 +25,10 @@
                                       # and the rest of the entry doesn't match.
 
                                       (choice
+                                       # For the cases where description and city are so long that only one space separates
+                                       # description, city, and country code, such that all get captured as description.
+                                       (if (sequence :simple-phrase (some :space-or-tab) :amount)
+                                         (capture 22))
                                        # For cases where description is so long that only one space separates the description from
                                        # the city column. This means that the city column gets captured as part of the description
                                        # and the rest of the entry doesn't match.
@@ -43,7 +47,7 @@
                                          (capture :simple-phrase)))
                                       (some :space-or-tab)
                                       (choice
-                                       # For cases where
+                                       # For cases where t
                                        (if (sequence (some :S) (some :space-or-tab) :country-code (some :space-or-tab) :amount)
                                          (sequence
                                           (capture (some :S))
@@ -52,9 +56,13 @@
                                        # For cases where the city spans 13 characters,
                                        # leaving no white space to separate city and country code.
                                        (if (sequence :simple-phrase (some :space-or-tab) :amount)
-                                         (sequence
-                                          (capture 13)
-                                          (capture :country-code)))
+                                         (choice
+                                          (sequence
+                                           (capture 13)
+                                           (capture :country-code))
+                                          (sequence
+                                           (capture 12)
+                                           (capture :country-code))))
 
                                        (if-not (sequence :simple-phrase (some :space-or-tab) :amount)
                                          (sequence
