@@ -1,17 +1,37 @@
-{:entries {:grammar {:date (group (sequence
-                                   (constant :type/date)
-                                   (capture :dd)
-                                   :/
-                                     (capture :mm)))
+{:entries {:grammar {:date (group (if (sequence :dd :/ :mm)
+                                    (sequence
+                                     (constant :type/date)
+                                     (capture :dd)
+                                     :/
+                                       (capture :mm))))
                      :space-or-tab (set " \t")
                      :amount :financial-figure
                      :reference-number (some :d)
                      :non-space-whitespace (set "\t\r\n\0\f\v")
                      :ascii-with-space (if-not :non-space-whitespace 1)
                      :country-code (sequence :a :a :a)
-                     # TODO: fix ramnode support
-                     # TODO: fix timescale support
-                     # TODO: cheque payment
+                     :payment-entry (sequence
+                                     :date
+                                       (some :space-or-tab)
+                                       :date
+                                       (some :space-or-tab)
+                                       (capture :reference-number)
+                                       (some :space-or-tab)
+                                       (capture
+                                        (sequence
+                                         "CHEQUE"
+                                         :space-or-tab
+                                           :simple-phrase))
+                                       (constant nil)
+                                       (constant nil)
+                                       (some :space-or-tab)
+                                       (accumulate
+                                        (sequence
+                                         (constant "-")
+                                         (capture :amount)))
+                                       :space-or-tab
+                                       "CR"
+                                       (constant nil))
                      :simple-entry (sequence
                                     :date
                                       (some :space-or-tab)
@@ -19,21 +39,18 @@
                                       (some :space-or-tab)
                                       (capture :reference-number :reference-number)
                                       (some :space-or-tab)
-                                      # TODO: Both ramnode and timescale support are hindered by the fact that only
-                                      # one space separates the description from the city column.
-                                      # This means that the city column gets captured as part of description
-                                      # and the rest of the entry doesn't match.
-
                                       (choice
                                        # For the cases where description and city are so long that only one space separates
                                        # description, city, and country code, such that all get captured as description.
                                        (if (sequence :simple-phrase (some :space-or-tab) :amount)
-                                         (capture 22))
+                                         (capture 22)
+                                         )
                                        # For cases where description is so long that only one space separates the description from
                                        # the city column. This means that the city column gets captured as part of the description
                                        # and the rest of the entry doesn't match.
                                        (if (sequence :simple-phrase (some :space-or-tab) :country-code (some :space-or-tab) :amount)
-                                         (capture 22))
+                                         (capture 22)
+                                         )
                                        # Even rarer case where both description and city are so long they merge with the country.
                                        # Implementation just captures 22 because it advances that many spaces, and lets the succeeding
                                        # patterns take over.
@@ -47,45 +64,51 @@
                                          (capture :simple-phrase)))
                                       (some :space-or-tab)
                                       (choice
-                                       # For cases where t
-                                       (if (sequence (some :S) (some :space-or-tab) :country-code (some :space-or-tab) :amount)
-                                         (sequence
-                                          (capture (some :S))
-                                          (some :space-or-tab)
-                                          (capture :country-code)))
-                                       # For cases where the city spans 13 characters,
-                                       # leaving no white space to separate city and country code.
+                                       # For cases wherein city spans long enough such that city and country code are treated as one
                                        (if (sequence :simple-phrase (some :space-or-tab) :amount)
                                          (choice
+                                          # For cases wherein the city spans long enough such that there is only one space between it and country code.
+                                          # This results in the country code being captured as part of the city IF we were to use :simple-phrase.
+                                          (sequence
+                                           (capture
+                                            (sequence (some :S)
+                                                      (any (sequence
+                                                            :non-newline-whitespace
+                                                              (if-not (sequence
+                                                                       :country-code
+                                                                         (some :space-or-tab)
+                                                                         :amount)
+                                                                (some :S))))))
+                                           (some :space-or-tab)
+                                           (capture :country-code)
+                                           )
+                                          # For cases where the city spans 13 characters,
+                                          # leaving no white space to separate city and country code.
+                                          # I'm looking at you, NEW YORK CITYUSA and SAN FRANCISCOUSA
                                           (sequence
                                            (capture 13)
-                                           (capture :country-code))
-                                          (sequence
-                                           (capture 12)
                                            (capture :country-code))))
 
-                                       (if-not (sequence :simple-phrase (some :space-or-tab) :amount)
-                                         (sequence
-                                          (capture :simple-phrase :city)
-                                          (some :space-or-tab)
-                                          (capture :simple-phrase :country)))
+                                       # The expected case
+                                       (sequence
+                                        (capture :simple-phrase :city)
+                                        (some :space-or-tab)
+                                        (capture :country-code))
                                        )
-                                      # (choice
-                                      #  (sequence
-                                      #   (constant "SAN FRANCISCO"))
-                                      #  (sequence
-                                      #   (capture :simple-phrase :city)
-                                      #   (some :space-or-tab))
-                                      #  )
-                                      
+
                                       (some :space-or-tab)
-                                      (capture :amount :amount))
+                                      (capture :amount :amount)
+                                      )
                      :multiline-entry (sequence
                                        :simple-entry
                                          :s*
-                                         (if-not :simple-entry (capture :simple-phrase)))
+                                         (if-not (choice :simple-entry
+                                                    :payment-entry
+                                                    "CURRENT BALANCE"
+                                                    "- please see next page for continuation of your transaction -")
+                                           (capture :simple-phrase)))
                      :entry (choice (group (sequence (constant :type/entry)
-                                                     (choice :multiline-entry :simple-entry))) 1)
+                                                     (choice :multiline-entry :simple-entry :payment-entry))) 1)
                      :main (choice (some :entry) 1)}
            :group-keys {:type/date [:day :month]
                         :type/entry [:date1 :date2 :refnum :description :city :country :amount :extra-description]}}

@@ -136,7 +136,6 @@
                  entry (zipcoll entry-keys row-rest)]
              (map (fn [key]
                     (let [cell (get entry key)]
-                      (print "cell " cell)
                       (if (array? cell)
                         # Convention is that the first entry of the group
                         # is the type declaration
