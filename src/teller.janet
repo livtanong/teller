@@ -149,8 +149,19 @@
                                               :month month
                                               :year year} structured-date]
                                          (if (nil? year)
-                                           (let [assumed-year (get-in statement-facts [:filename :teller/statement-date :year])]
-                                             (wrap-quotes (string assumed-year "-" month "-" day)))
+                                           (let [statement-date (get-in statement-facts [:filename :teller/statement-date])
+                                                 {:year billing-year
+                                                  :month billing-month} statement-date
+                                                 parsed-billing-year (scan-number billing-year)
+                                                 parsed-billing-month (scan-number billing-month)
+                                                 parsed-entry-month (scan-number month)
+                                                 # If we know that a bill points to January, then any December entry
+                                                 # should have a year decremented.
+                                                 entry-year (if (and (= parsed-billing-month 1)
+                                                                     (= parsed-entry-month 12))
+                                                              (dec parsed-billing-year)
+                                                              parsed-billing-year)]
+                                             (wrap-quotes (string entry-year "-" month "-" day)))
                                            (wrap-quotes (string year "-" month "-" day))))
                             (string "\"" (string/join rest "-") "\"")))
                         (string "\"" cell "\""))))
@@ -203,19 +214,23 @@
                                     (os/getenv "TELLER_CSV_DELIMITER")
                                     ",")
             input-filename (path/basename input-path)
-            output-path (get res "output"
-                             (if statement-dir
-                               (let [input-ext (path/ext input-filename)
-                                     no-ext (if (string/has-suffix? input-ext input-filename)
-                                              (first (split-filename input-filename))
-                                              input-filename)]
-                                 (string statement-dir "/" (string/replace " " "_" no-ext) ".tsv"))
-                               (let [files-in-statement-dir (os/dir statement-dir)]
-                                 # TODO: autoincrement
-                                 # Filter all files whose prefix is out and suffix is .tsv.
-                                 # Split each file such that given some form `out-n.tsv`, n is separated and parsed as an int
-                                 # Get the highest int, then increment.
-                                 (string statement-dir "/" "out.tsv"))))
+            output-path (get res "output")
+            output-filepath (if (nil? output-path)
+                              (if statement-dir
+                                (let [input-ext (path/ext input-filename)
+                                      no-ext (if (string/has-suffix? input-ext input-filename)
+                                               (first (split-filename input-filename))
+                                               input-filename)]
+                                  (string statement-dir "/" (string/replace " " "_" no-ext) ".csv"))
+                                (let [files-in-statement-dir (os/dir statement-dir)]
+                                  # TODO: autoincrement
+                                  # Filter all files whose prefix is out and suffix is .tsv.
+                                  # Split each file such that given some form `out-n.tsv`, n is separated and parsed as an int
+                                  # Get the highest int, then increment.
+                                  (string statement-dir "/" "out.tsv")))
+                              (if (= :directory (get (os/stat output-path) :mode))
+                                (path/join output-path (string input-filename ".csv"))
+                                output-path))
             statement-format (-> jdn::statement-formats/jdns
                                  (get statement-format)
                                  (with-base-grammar))
@@ -224,12 +239,9 @@
             parsed-filename (parse-filename filename-format input-filename)
             statement-facts {:filename parsed-filename}
             pdf-text (read-pdf input-path password)
-            _ (print pdf-text)
             parsed-soa (parse-entries statement-facts entries-format pdf-text)
             output-text (data->tsv delimiter-character parsed-soa)
            ]
         (if (or stdout? (not output-path))
           (print output-text)
-          (spit output-path output-text))))))
-
-
+          (spit output-filepath output-text))))))
