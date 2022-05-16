@@ -22,7 +22,7 @@ jobs:
         run: |
           echo "PREFIX=$GITHUB_WORKSPACE/bin" >> $GITHUB_ENV
       - name: Set up directories
-        run: mkdir -r $PREFIX
+        run: mkdir -p $PREFIX
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout teller
         uses: actions/checkout@v3
