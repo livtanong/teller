@@ -45,9 +45,9 @@ jobs:
         run: cd $GITHUB_WORKSPACE/jpm;janet bootstrap.janet
       - run: ls
       - name: Install teller deps
-        run: cd $GITHUB_WORKSPACE/teller;jpm deps
+        run: cd $GITHUB_WORKSPACE/main;jpm deps
       - name: Run teller tests
-        run: cd $GITHUB_WORKSPACE/teller;jpm test
+        run: cd $GITHUB_WORKSPACE/main;jpm test
       # - name: find latest version of janet
       #   id: janet-ver
       #   uses: oprypin/find-latest-tag@v1
