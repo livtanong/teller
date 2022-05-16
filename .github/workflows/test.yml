@@ -16,11 +16,11 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    env:
-      PREFIX: "$GITHUB_WORKSPACE/bin"
-
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Set up complex env vars
+        run: |
+          echo "PREFIX=$GITHUB_WORKSPACE/bin"
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout teller
         uses: actions/checkout@v3
