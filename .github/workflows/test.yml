@@ -43,6 +43,7 @@ jobs:
         run: cd janet;make install
       - name: Bootstrap JPM
         run: cd $GITHUB_WORKSPACE/jpm;janet bootstrap.janet
+      - run: ls
       - name: Install teller deps
         run: cd $GITHUB_WORKSPACE/teller;jpm deps
       - name: Run teller tests
