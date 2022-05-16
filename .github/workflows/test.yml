@@ -42,11 +42,8 @@ jobs:
       - name: Install janet
         run: cd janet;make install
       - run: echo $PATH
-      - run: cd $GITHUB_WORKSPACE/jpm
-      - run: ls
-      - run: ls $PREFIX/bin
       - name: Bootstrap JPM
-        run: $PREFIX/bin/janet bootstrap.janet
+        run: cd $GITHUB_WORKSPACE/jpm;janet bootstrap.janet
       # - name: find latest version of janet
       #   id: janet-ver
       #   uses: oprypin/find-latest-tag@v1
