@@ -28,6 +28,11 @@ jobs:
           repository: janet-lang/janet
           releases-only: true
           prefix: 'v'
+      - name: clone janet
+        uses: actions/checkout@master
+        with:
+          repository: janet-lang/janet
+      - run: ls
       - name: download janet
         run: curl -LO https://github.com/janet-lang/janet/releases/download/${{ steps.janet-ver.outputs.tag }}/janet-${{ steps.janet-ver.outputs.tag }}-linux-x64.tar.gz
       - name: extract janet
