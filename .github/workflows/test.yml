@@ -45,7 +45,7 @@ jobs:
       - run: cd $GITHUB_WORKSPACE/jpm
       - run: ls $PREFIX/bin
       - name: Bootstrap JPM
-        run: janet bootstrap.janet
+        run: $PREFIX/bin/janet bootstrap.janet
       # - name: find latest version of janet
       #   id: janet-ver
       #   uses: oprypin/find-latest-tag@v1
