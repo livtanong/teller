@@ -41,9 +41,12 @@ jobs:
           path: jpm
       - name: Install janet
         run: cd janet;make install
-      - run: echo $PATH
       - name: Bootstrap JPM
         run: cd $GITHUB_WORKSPACE/jpm;janet bootstrap.janet
+      - name: Install teller deps
+        run: cd $GITHUB_WORKSPACE/teller;jpm deps
+      - name: Run teller tests
+        run: cd $GITHUB_WORKSPACE/teller;jpm test
       # - name: find latest version of janet
       #   id: janet-ver
       #   uses: oprypin/find-latest-tag@v1
