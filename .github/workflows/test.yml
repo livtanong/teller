@@ -16,8 +16,8 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # env:
-    #   PREFIX:
+    env:
+      PREFIX: $GITHUB_WORKSPACE/bin
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -36,9 +36,10 @@ jobs:
         with:
           repository: janet-lang/jpm
           path: jpm
-      - run: pwd
-      # - name: Install janet
-      #   run: cd janet;make install
+      - name: Install janet
+        run: cd janet;make install
+      - run: cd $PREFIX
+      - run: ls
       # - name: find latest version of janet
       #   id: janet-ver
       #   uses: oprypin/find-latest-tag@v1
