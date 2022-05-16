@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Set up complex env vars
         run: |
-          echo "PREFIX=$GITHUB_WORKSPACE/bin"
+          echo "PREFIX=$GITHUB_WORKSPACE/bin" >> $GITHUB_ENV
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout teller
         uses: actions/checkout@v3
