@@ -44,6 +44,10 @@ jobs:
         run: echo "JANET_LIBPATH=janet-${{ steps.janet-ver.outputs.tag }}-linux/lib" >> $GITHUB_ENV
       - name: set JANET_HEADERPATH
         run: echo "JANET_HEADERPATH=janet-${{ steps.janet-ver.outputs.tag }}-linux/include" >> $GITHUB_ENV
+      - name: clone jpm
+        run: git clone https://github.com/janet-lang/jpm.git
+      - name: bootstrap jpm
+        run: cd jpm;janet bootstrap.janet
       - name: install dependencies
         run: /usr/bin/env jpm deps
       - name: run tests
