@@ -19,9 +19,9 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Set up complex env vars
-        run: |
-          echo "PREFIX=$GITHUB_WORKSPACE/cli" >> $GITHUB_ENV
-          echo $PREFIX >> $GITHUB_PATH
+        run: echo "PREFIX=$GITHUB_WORKSPACE/cli" >> $GITHUB_ENV
+      - name: Add PREFIX to path
+        run: echo $PREFIX >> $GITHUB_PATH
       - name: Set up directories
         run: mkdir -p $PREFIX
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
