@@ -21,7 +21,7 @@ jobs:
       - name: Set up complex env vars
         run: echo "PREFIX=$GITHUB_WORKSPACE/cli" >> $GITHUB_ENV
       - name: Add PREFIX to path
-        run: echo $PREFIX >> $GITHUB_PATH
+        run: echo $PREFIX/bin >> $GITHUB_PATH
       - name: Set up directories
         run: mkdir -p $PREFIX
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
