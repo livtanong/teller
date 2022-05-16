@@ -20,7 +20,8 @@ jobs:
     steps:
       - name: Set up complex env vars
         run: |
-          echo "PREFIX=$GITHUB_WORKSPACE/bin" >> $GITHUB_ENV
+          echo "PREFIX=$GITHUB_WORKSPACE/cli" >> $GITHUB_ENV
+          echo $PREFIX >> $GITHUB_PATH
       - name: Set up directories
         run: mkdir -p $PREFIX
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -40,6 +41,7 @@ jobs:
           path: jpm
       - name: Install janet
         run: cd janet;make install
+
       # - name: find latest version of janet
       #   id: janet-ver
       #   uses: oprypin/find-latest-tag@v1
