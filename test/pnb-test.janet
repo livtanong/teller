@@ -5,8 +5,7 @@
 
 (def grammar
   (teller/with-base-grammar
-   (struct/to-table
-    (get statement-formats/jdns :pnb))))
+   (get statement-formats/jdns :pnb)))
 
 (def multiline-statement-text
   ``
@@ -34,9 +33,9 @@ ACCOUNT DETAILS
   ``)
 
 (deftest multiline-parse
-  (is (deep= @[@["\"19/12\"" "\"19/12\"" "\"BAYAD CENTER MERALCO                  PASAY          WTF\"" "\"12345678901\"" "\"2,883.55\""]
-               @["\"24/12\"" "\"25/12\"" "\"FACEBK XTJBT7P442                 FB.ME/ADS         IRL\"" "\"23456789012\"" "\"1,666.12\""]
-               @["\"09/01\"" "\"11/01\"" "\"BAYAD CENTER MERALCO                  PASAY          WTF\"" "\"34567890123\"" "\"2,420.02\""]]
-             (teller/parse-soa grammar multiline-statement-text))))
+  (is (deep= @[@["\"19/12\"" "\"19/12\"" "\"12345678901\"" "\"BAYAD CENTER MERALCO\"" "\"PASAY\"" "\"WTF\"" "\"2,883.55\"" "\"\""]
+               @["\"24/12\"" "\"25/12\"" "\"23456789012\"" "\"FACEBK XTJBT7P442\"" "\"FB.ME/ADS\"" "\"IRL\"" "\"1,666.12\"" "\"\""]
+               @["\"09/01\"" "\"11/01\"" "\"34567890123\"" "\"BAYAD CENTER MERALCO\"" "\"PASAY\"" "\"WTF\"" "\"2,420.02\"" "\"\""]]
+             (teller/parse-entries {} (get grammar :entries) multiline-statement-text))))
 
 (run-tests!)

@@ -149,19 +149,22 @@
                                               :month month
                                               :year year} structured-date]
                                          (if (nil? year)
-                                           (let [statement-date (get-in statement-facts [:filename :teller/statement-date])
-                                                 {:year billing-year
-                                                  :month billing-month} statement-date
-                                                 parsed-billing-year (scan-number billing-year)
-                                                 parsed-billing-month (scan-number billing-month)
-                                                 parsed-entry-month (scan-number month)
-                                                 # If we know that a bill points to January, then any December entry
-                                                 # should have a year decremented.
-                                                 entry-year (if (and (= parsed-billing-month 1)
-                                                                     (= parsed-entry-month 12))
-                                                              (dec parsed-billing-year)
-                                                              parsed-billing-year)]
-                                             (wrap-quotes (string entry-year "-" month "-" day)))
+                                           (let [statement-date (get-in statement-facts [:filename :teller/statement-date])]
+                                             (if-not statement-date
+                                               (wrap-quotes (string day "/" month))
+                                               (let [{:year billing-year
+                                                      :month billing-month} statement-date
+                                                     parsed-billing-year (scan-number billing-year)
+                                                     parsed-billing-month (scan-number billing-month)
+                                                     parsed-entry-month (scan-number month)
+                                                     # If we know that a bill points to January, then any December entry
+                                                     # should have a year decremented.
+                                                     entry-year (if (and (= parsed-billing-month 1)
+                                                                         (= parsed-entry-month 12))
+                                                                  (dec parsed-billing-year)
+                                                                  parsed-billing-year)]
+                                                 (wrap-quotes (string entry-year "-" month "-" day)))
+                                               ))
                                            (wrap-quotes (string year "-" month "-" day))))
                             (string "\"" (string/join rest "-") "\"")))
                         (string "\"" cell "\""))))

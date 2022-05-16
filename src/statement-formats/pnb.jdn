@@ -107,9 +107,9 @@
                                                     "CURRENT BALANCE"
                                                     "- please see next page for continuation of your transaction -")
                                            (capture :simple-phrase)))
-                     :entry (choice (group (sequence (constant :type/entry)
-                                                     (choice :multiline-entry :simple-entry :payment-entry))) 1)
-                     :main (choice (some :entry) 1)}
+                     :entry (thru (group (sequence (constant :type/entry)
+                                                   (choice :multiline-entry :simple-entry :payment-entry))))
+                     :main (thru (some :entry))}
            :group-keys {:type/date [:day :month]
                         :type/entry [:date1 :date2 :refnum :description :city :country :amount :extra-description]}}
  :filename {:grammar {:main (sequence "SOA_"
