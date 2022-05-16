@@ -48,6 +48,7 @@ jobs:
         run: git clone https://github.com/janet-lang/jpm.git
       - run: cd jpm
       - run: echo $PATH
+      - run: which janet
       - name: bootstrap jpm
         run: janet bootstrap.janet
       - name: install dependencies
