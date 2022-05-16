@@ -36,7 +36,7 @@ jobs:
         with:
           repository: janet-lang/jpm
           path: jpm
-      - run: cwd
+      - run: pwd
       # - name: Install janet
       #   run: cd janet;make install
       # - name: find latest version of janet
