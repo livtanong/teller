@@ -47,7 +47,7 @@ jobs:
       - name: clone jpm
         run: git clone https://github.com/janet-lang/jpm.git
       - name: bootstrap jpm
-        run: cd jpm;janet bootstrap.janet
+        run: cd jpm;$GITHUB_PATH/janet bootstrap.janet
       - name: install dependencies
         run: /usr/bin/env jpm deps
       - name: run tests
