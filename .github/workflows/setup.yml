@@ -1,0 +1,32 @@
+name: Setup
+on:
+  workflow_call:
+
+jobs:
+  setup_deps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up complex env vars
+        run: echo "PREFIX=$GITHUB_WORKSPACE/cli" >> $GITHUB_ENV
+      - name: Add PREFIX to path
+        run: echo $PREFIX/bin >> $GITHUB_PATH
+      - name: Set up directories
+        run: mkdir -p $PREFIX
+      - name: Checkout teller
+        uses: actions/checkout@v3
+        with:
+          path: main
+      - name: Checkout janet
+        uses: actions/checkout@v3
+        with:
+          repository: janet-lang/janet
+          path: janet
+      - name: Checkout jpm
+        uses: actions/checkout@v3
+        with:
+          repository: janet-lang/jpm
+          path: jpm
+      - name: Install janet
+        run: cd janet;make install
+      - name: Bootstrap JPM
+        run: cd $GITHUB_WORKSPACE/jpm;janet bootstrap.janet

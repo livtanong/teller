@@ -12,78 +12,16 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  setup:
+    uses: ./github/workflows/setup.yml
   test:
+    needs: setup
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: Set up complex env vars
-        run: echo "PREFIX=$GITHUB_WORKSPACE/cli" >> $GITHUB_ENV
-      - name: Add PREFIX to path
-        run: echo $PREFIX/bin >> $GITHUB_PATH
-      - name: Set up directories
-        run: mkdir -p $PREFIX
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout teller
-        uses: actions/checkout@v3
-        with:
-          path: main
-      - name: Checkout janet
-        uses: actions/checkout@v3
-        with:
-          repository: janet-lang/janet
-          path: janet
-      - name: Checkout jpm
-        uses: actions/checkout@v3
-        with:
-          repository: janet-lang/jpm
-          path: jpm
-      - name: Install janet
-        run: cd janet;make install
-      - name: Bootstrap JPM
-        run: cd $GITHUB_WORKSPACE/jpm;janet bootstrap.janet
-      - run: ls
       - name: Install teller deps
         run: cd $GITHUB_WORKSPACE/main;jpm deps
       - name: Run teller tests
         run: cd $GITHUB_WORKSPACE/main;jpm test
-      # - name: find latest version of janet
-      #   id: janet-ver
-      #   uses: oprypin/find-latest-tag@v1
-      #   with:
-      #     repository: janet-lang/janet
-      #     releases-only: true
-      #     prefix: 'v'
-      # - name: clone janet
-      #   uses: actions/checkout@master
-      #   with:
-      #     repository: janet-lang/janet
-      # - run: ls
-      # - name: download janet
-      #   run: curl -LO https://github.com/janet-lang/janet/releases/download/${{ steps.janet-ver.outputs.tag }}/janet-${{ steps.janet-ver.outputs.tag }}-linux-x64.tar.gz
-      # - name: extract janet
-      #   run: tar -xvzf janet-${{ steps.janet-ver.outputs.tag }}-linux-x64.tar.gz
-      # # - name: add directory to path
-      # #   run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux" >> $GITHUB_PATH
-      # - name: add bin directory to path
-      #   run: echo "janet-${{ steps.janet-ver.outputs.tag }}-linux-x64/bin" >> $GITHUB_PATH
-      # - name: make modules directory
-      #   run: mkdir modules
-      # - name: set JANET_PATH
-      #   run: echo "JANET_PATH=modules" >> $GITHUB_ENV
-      # - name: set JANET_LIBPATH
-      #   run: echo "JANET_LIBPATH=janet-${{ steps.janet-ver.outputs.tag }}-linux/lib" >> $GITHUB_ENV
-      # - name: set JANET_HEADERPATH
-      #   run: echo "JANET_HEADERPATH=janet-${{ steps.janet-ver.outputs.tag }}-linux/include" >> $GITHUB_ENV
-      # - name: clone jpm
-      #   run: git clone https://github.com/janet-lang/jpm.git
-      # - run: cd jpm
-      # - run: echo $PATH
-      # - run: which janet
-      # - name: bootstrap jpm
-      #   run: janet bootstrap.janet
-      # - name: install dependencies
-      #   run: /usr/bin/env jpm deps
-      # - name: run tests
-      #   run: /usr/bin/env jpm test
