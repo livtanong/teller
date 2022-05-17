@@ -21,6 +21,8 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Checkout teller
+        uses: actions/checkout@v3
       - name: Pull Janet CLI
         uses: actions/download-artifact@v3
         with:
@@ -30,8 +32,7 @@ jobs:
         run: echo janet-cli/bin >> $GITHUB_PATH
       - run: ls janet-cli
       - run: ls janet-cli/bin
-      - name: Checkout teller
-        uses: actions/checkout@v3
+      - run: echo $PATH
       - name: Install teller deps
         run: jpm deps
       - name: Run teller tests
