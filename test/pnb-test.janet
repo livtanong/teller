@@ -34,7 +34,7 @@ ACCOUNT DETAILS
 
 (deftest multiline-parse
   (is (deep= @[@["\"19/12\"" "\"19/12\"" "\"12345678901\"" "\"BAYAD CENTER MERALCO\"" "\"PASAY\"" "\"WTF\"" "\"2,883.55\"" "\"\""]
-               @["\"24/12\"" "\"25/12\"" "\"23456789012\"" "\"FACEBK ABCDEFGHIJ\"" "\"FB.ME/ADS\"" "\"IRL\"" "\"1,666.12\"" "\"\""]
+               @["\"24/12\"" "\"25/12\"" "\"23456789012\"" "\"FACEBK ABCDEFGHIJK\"" "\"FB.ME/ADS\"" "\"IRL\"" "\"1,666.12\"" "\"\""]
                @["\"09/01\"" "\"11/01\"" "\"34567890123\"" "\"BAYAD CENTER MERALCO\"" "\"PASAY\"" "\"WTF\"" "\"2,420.02\"" "\"\""]]
              (teller/parse-entries {} (get grammar :entries) multiline-statement-text))))
 
