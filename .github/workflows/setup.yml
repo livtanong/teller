@@ -10,6 +10,7 @@ jobs:
   setup_janet:
     runs-on: ubuntu-latest
     steps:
+      - run: echo $PREFIX
       - name: Add PREFIX to path
         run: echo $PREFIX/bin >> $GITHUB_PATH
       - name: Set up directories
