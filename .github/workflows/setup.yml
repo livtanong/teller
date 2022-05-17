@@ -2,7 +2,7 @@ name: Setup Janet
 on:
   workflow_call:
     inputs:
-      PREFIX:
+      janet_prefix:
         required: true
         type: string
 
@@ -10,6 +10,8 @@ jobs:
   setup_janet:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup PREFIX
+        run: echo PREFIX=${{ inputs.janet_prefix }} >> $GITHUB_ENV
       - run: echo $PREFIX
       - name: Add PREFIX to path
         run: echo $PREFIX/bin >> $GITHUB_PATH
