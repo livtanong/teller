@@ -12,8 +12,6 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  setup:
-    uses: ./.github/workflows/setup.yml
   test:
     needs: setup
     # The type of runner that the job will run on
@@ -21,6 +19,11 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Pull Janet CLI
+        uses: actions/download-artifact@v3
+        with:
+          name: janet-cli
+      - run: ls
       - name: Checkout teller
         uses: actions/checkout@v3
       - name: Install teller deps
