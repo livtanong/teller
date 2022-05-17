@@ -28,6 +28,7 @@ jobs:
         with:
           name: janet-cli
           path: janet-cli
+      - run: chmod -R +x janet-cli
       - name: Add janet to path
         run: echo janet-cli/bin >> $GITHUB_PATH
       - run: ls janet-cli
