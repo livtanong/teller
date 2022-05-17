@@ -10,12 +10,15 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  janet_prefix: janet-cli
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   setup:
     uses: ./.github/workflows/setup.yml
     with:
-      janet_prefix: janet-cli
+      janet_prefix: ${{ env.janet_prefix }}
   test:
     needs: setup
     # The type of runner that the job will run on
@@ -29,11 +32,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: janet-cli
-          path: ./janet-cli
+          path: ${{ env.janet_prefix }}
       - name: Make Janet and friends executable
-        run: chmod -R +x cli
+        run: chmod -R +x ${{ env.janet_prefix }}
       - name: Add janet to path
-        run: echo ./janet-cli/bin >> $GITHUB_PATH
+        run: echo ./${{ env.janet_prefix }}/bin >> $GITHUB_PATH
       - run: echo $PATH
       - name: Install teller deps
         run: jpm deps
