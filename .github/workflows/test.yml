@@ -27,12 +27,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: janet-cli
-          path: janet-cli
-      - run: chmod -R +x janet-cli
+          path: cli
+      - run: chmod -R +x cli
       - name: Add janet to path
-        run: echo janet-cli/bin >> $GITHUB_PATH
-      - run: ls janet-cli
-      - run: ls janet-cli/bin
+        run: echo cli/bin >> $GITHUB_PATH
+      - run: ls cli
+      - run: ls cli/bin
       - run: pwd
       - run: echo $PATH
       - name: Install teller deps
