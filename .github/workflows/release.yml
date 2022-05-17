@@ -1,0 +1,70 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Create Release
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+env:
+  janet_prefix: janet-cli
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  setup:
+    uses: ./.github/workflows/setup.yml
+    with:
+      # Ideally should be ${{ env.janet_prefix }} but somehow doesn't work.
+      # See https://github.com/actions/runner/issues/480
+      janet_prefix: janet-cli
+  release:
+    needs: setup
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout teller
+        uses: actions/checkout@v3
+      - name: Pull Janet CLI
+        uses: actions/download-artifact@v3
+        with:
+          name: janet-cli
+          path: ${{ env.janet_prefix }}
+      - name: Make Janet and friends executable
+        run: chmod -R +x ${{ env.janet_prefix }}
+      - name: Add janet to path
+        run: echo ./${{ env.janet_prefix }}/bin >> $GITHUB_PATH
+      - name: Install teller deps
+        run: jpm deps
+      - name: build
+        run: jpm build
+    
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/teller
+
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     release_name: Release ${{ github.ref }}
+      #     draft: false
+      #     prerelease: false
+      # - name: Upload Release Asset
+      #   id: upload-release-asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+      #     asset_path: build/teller
+      #     asset_name: teller
+      #     asset_content_type: application/octet-stream

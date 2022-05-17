@@ -1,0 +1,37 @@
+name: Setup Janet
+on:
+  workflow_call:
+    inputs:
+      janet_prefix:
+        required: true
+        type: string
+
+jobs:
+  setup_janet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup PREFIX
+        run: echo PREFIX=$GITHUB_WORKSPACE/${{ inputs.janet_prefix }} >> $GITHUB_ENV
+      - name: Add PREFIX to path
+        run: echo $PREFIX/bin >> $GITHUB_PATH
+      - name: Set up directories
+        run: mkdir -p $PREFIX
+      - name: Checkout janet
+        uses: actions/checkout@v3
+        with:
+          repository: janet-lang/janet
+          path: janet
+      - name: Checkout jpm
+        uses: actions/checkout@v3
+        with:
+          repository: janet-lang/jpm
+          path: jpm
+      - name: Install janet
+        run: cd janet;make install
+      - name: Bootstrap JPM
+        run: cd $GITHUB_WORKSPACE/jpm;janet bootstrap.janet
+      - name: Archive Janet CLI
+        uses: actions/upload-artifact@v3
+        with:
+          name: janet-cli
+          path: ${{ inputs.janet_prefix }}

@@ -1,0 +1,45 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  janet_prefix: janet-cli
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  setup:
+    uses: ./.github/workflows/setup.yml
+    with:
+      # Ideally should be ${{ env.janet_prefix }} but somehow doesn't work.
+      # See https://github.com/actions/runner/issues/480
+      janet_prefix: janet-cli
+  test:
+    needs: setup
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Checkout teller
+        uses: actions/checkout@v3
+      - name: Pull Janet CLI
+        uses: actions/download-artifact@v3
+        with:
+          name: janet-cli
+          path: ${{ env.janet_prefix }}
+      - name: Make Janet and friends executable
+        run: chmod -R +x ${{ env.janet_prefix }}
+      - name: Add janet to path
+        run: echo ./${{ env.janet_prefix }}/bin >> $GITHUB_PATH
+      - name: Install teller deps
+        run: jpm deps
+      - name: Run teller tests
+        run: jpm test
