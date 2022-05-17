@@ -18,7 +18,7 @@ jobs:
   setup:
     uses: ./.github/workflows/setup.yml
     with:
-      janet_prefix: ${{ env.janet_prefix }}
+      janet_prefix: janet-cli
   test:
     needs: setup
     # The type of runner that the job will run on
