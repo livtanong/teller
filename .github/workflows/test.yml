@@ -33,6 +33,7 @@ jobs:
         run: echo janet-cli/bin >> $GITHUB_PATH
       - run: ls janet-cli
       - run: ls janet-cli/bin
+      - run: pwd
       - run: echo $PATH
       - name: Install teller deps
         run: jpm deps
