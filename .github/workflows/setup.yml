@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup PREFIX
-        run: echo PREFIX=${{ inputs.janet_prefix }} >> $GITHUB_ENV
+        run: echo PREFIX=$GITHUB_WORKSPACE/${{ inputs.janet_prefix }} >> $GITHUB_ENV
       - name: Add PREFIX to path
         run: echo $PREFIX/bin >> $GITHUB_PATH
       - name: Set up directories
