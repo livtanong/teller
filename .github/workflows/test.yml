@@ -14,6 +14,8 @@ on:
 jobs:
   setup:
     uses: ./.github/workflows/setup.yml
+    with:
+      PREFIX: ./janet-cli
   test:
     needs: setup
     # The type of runner that the job will run on
@@ -27,13 +29,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: janet-cli
-          path: cli
-      - run: chmod -R +x cli
+          path: ./janet-cli
+      - name: Make Janet and friends executable
+        run: chmod -R +x cli
       - name: Add janet to path
-        run: echo cli/bin >> $GITHUB_PATH
-      - run: ls cli
-      - run: ls cli/bin
-      - run: pwd
+        run: echo ./janet-cli/bin >> $GITHUB_PATH
       - run: echo $PATH
       - name: Install teller deps
         run: jpm deps
