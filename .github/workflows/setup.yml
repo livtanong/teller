@@ -12,7 +12,6 @@ jobs:
     steps:
       - name: Setup PREFIX
         run: echo PREFIX=${{ inputs.janet_prefix }} >> $GITHUB_ENV
-      - run: echo $PREFIX
       - name: Add PREFIX to path
         run: echo $PREFIX/bin >> $GITHUB_PATH
       - name: Set up directories
@@ -29,6 +28,9 @@ jobs:
           path: jpm
       - name: Install janet
         run: cd janet;make install
+      - run: ls
+      - run: ls $PREFIX
+      - run: ls $PREFIX/bin
       - name: Bootstrap JPM
         run: cd $GITHUB_WORKSPACE/jpm;janet bootstrap.janet
       - name: Archive Janet CLI
