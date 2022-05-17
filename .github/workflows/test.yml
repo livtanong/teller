@@ -21,7 +21,9 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Checkout teller
+        uses: actions/checkout@v3
       - name: Install teller deps
-        run: cd $GITHUB_WORKSPACE/main;jpm deps
+        run: jpm deps
       - name: Run teller tests
-        run: cd $GITHUB_WORKSPACE/main;jpm test
+        run: jpm test
