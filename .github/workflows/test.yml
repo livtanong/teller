@@ -25,6 +25,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: janet-cli
+          path: janet-cli
+      - name: Add janet to path
+        run: echo janet-cli/bin >> $GITHUB_PATH
       - run: ls
       - name: Checkout teller
         uses: actions/checkout@v3
