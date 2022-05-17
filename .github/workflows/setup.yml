@@ -16,10 +16,6 @@ jobs:
         run: echo $PREFIX/bin >> $GITHUB_PATH
       - name: Set up directories
         run: mkdir -p $PREFIX
-      - run: ls
-      - run: ls $PREFIX
-      - run: ls janet-cli
-      - run: ls $PREFIX/bin
       - name: Checkout janet
         uses: actions/checkout@v3
         with:
