@@ -18,6 +18,8 @@ jobs:
   setup:
     uses: ./.github/workflows/setup.yml
     with:
+      # Ideally should be ${{ env.janet_prefix }} but somehow doesn't work.
+      # See https://github.com/actions/runner/issues/480
       janet_prefix: janet-cli
   test:
     needs: setup
@@ -37,7 +39,6 @@ jobs:
         run: chmod -R +x ${{ env.janet_prefix }}
       - name: Add janet to path
         run: echo ./${{ env.janet_prefix }}/bin >> $GITHUB_PATH
-      - run: echo $PATH
       - name: Install teller deps
         run: jpm deps
       - name: Run teller tests
