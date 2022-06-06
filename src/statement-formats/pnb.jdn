@@ -17,11 +17,7 @@
                                        (some :space-or-tab)
                                        (capture :reference-number)
                                        (some :space-or-tab)
-                                       (capture
-                                        (sequence
-                                         "CHEQUE"
-                                         :space-or-tab
-                                           :simple-phrase))
+                                       (capture :simple-phrase)
                                        (constant nil)
                                        (constant nil)
                                        (some :space-or-tab)
