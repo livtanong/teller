@@ -11,10 +11,13 @@ This project uses jdn-loader, which allows you to load jdns as if they were .jan
 
 # Compile
 
-jpm deps
-jpm build
+`jpm clean`
+`jpm deps`
+`jpm build`
 (optionally...)
-jpm install
+`jpm install`
+(or...)
+`cp ./build/teller $DIR_IN_PATH`
 
 # Debugging
 pdftotext -nopgbrk -layout -upw $PASSWORD $PATH_TO_PDF -   
