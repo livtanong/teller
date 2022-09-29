@@ -28,6 +28,19 @@
                                        :space-or-tab
                                        "CR"
                                        (constant nil))
+                     :late-payment-entry (sequence
+                                           :date
+                                           (some :space-or-tab)
+                                           :date
+                                           (some :space-or-tab)
+                                           (capture :reference-number)
+                                           (some :space-or-tab)
+                                           (capture "LATE CHARGE DEBIT ADJUSTMENT")
+                                           (constant nil)
+                                           (constant nil)
+                                           (some :space-or-tab)
+                                           (capture :amount :amount)
+                                           )
                      :simple-entry (sequence
                                     :date
                                       (some :space-or-tab)
@@ -104,7 +117,7 @@
                                                     "- please see next page for continuation of your transaction -")
                                            (capture :simple-phrase)))
                      :entry (thru (group (sequence (constant :type/entry)
-                                                   (choice :multiline-entry :simple-entry :payment-entry))))
+                                                   (choice :multiline-entry :simple-entry :payment-entry :late-payment-entry))))
                      :main (thru (some :entry))}
            :group-keys {:type/date [:day :month]
                         :type/entry [:date1 :date2 :refnum :description :city :country :amount :extra-description]}}
