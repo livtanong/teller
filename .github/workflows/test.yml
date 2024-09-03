@@ -31,7 +31,7 @@ jobs:
       - name: Checkout teller
         uses: actions/checkout@v3
       - name: Pull Janet CLI
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: janet-cli
           path: ${{ env.janet_prefix }}
